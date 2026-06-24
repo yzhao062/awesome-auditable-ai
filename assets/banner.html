@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 360px; }
+  body {
+    font-family: "Segoe UI", -apple-system, system-ui, Roboto, Helvetica, Arial, sans-serif;
+    background:
+      radial-gradient(1100px 520px at 80% 18%, #182747 0%, #0d1526 55%, #0a111f 100%);
+    color: #e9eef7;
+    position: relative;
+    overflow: hidden;
+  }
+  .frame { position: absolute; inset: 0; border: 1px solid rgba(255,255,255,0.06); }
+  .accentbar { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(#5eead4, #38bdf8); }
+  .wrap { position: absolute; inset: 0; padding: 56px 64px; display: flex; flex-direction: column; justify-content: center; }
+  .eyebrow { font-size: 14px; letter-spacing: 0.22em; text-transform: uppercase; color: #8492ad; font-weight: 600; margin-bottom: 16px; }
+  .title { font-size: 52px; line-height: 1.1; font-weight: 800; letter-spacing: -0.015em; color: #f4f7fc; max-width: 820px; }
+  .title .accent { color: #5eead4; }
+  .rule { width: 60px; height: 4px; background: #5eead4; border-radius: 2px; margin: 22px 0 18px; }
+  .tag { font-size: 19px; line-height: 1.5; color: #aab6cc; max-width: 700px; font-weight: 400; }
+  .meta { position: absolute; left: 64px; bottom: 30px; font-size: 13.5px; color: #6c7a96; letter-spacing: 0.01em; }
+  svg.motif { position: absolute; right: 28px; top: 0; height: 360px; width: 420px; opacity: 0.34; }
+</style>
+</head>
+<body>
+  <div class="frame"></div>
+  <div class="accentbar"></div>
+
+  <svg class="motif" viewBox="0 0 420 360" fill="none">
+    <g stroke="#5573a8" stroke-width="1.4">
+      <line x1="70" y1="84" x2="168" y2="54"/>
+      <line x1="168" y1="54" x2="268" y2="92"/>
+      <line x1="268" y1="92" x2="356" y2="62"/>
+      <line x1="168" y1="54" x2="132" y2="172"/>
+      <line x1="268" y1="92" x2="240" y2="190"/>
+      <line x1="356" y1="62" x2="344" y2="176"/>
+      <line x1="132" y1="172" x2="240" y2="190"/>
+      <line x1="240" y1="190" x2="344" y2="176"/>
+      <line x1="132" y1="172" x2="192" y2="286"/>
+      <line x1="240" y1="190" x2="304" y2="296"/>
+      <line x1="192" y1="286" x2="304" y2="296"/>
+      <line x1="132" y1="172" x2="96" y2="300"/>
+      <line x1="192" y1="286" x2="96" y2="300"/>
+    </g>
+    <g fill="#27375a" stroke="#52689a" stroke-width="1.6">
+      <circle cx="70" cy="84" r="6"/>
+      <circle cx="168" cy="54" r="6"/>
+      <circle cx="356" cy="62" r="6"/>
+      <circle cx="132" cy="172" r="6"/>
+      <circle cx="344" cy="176" r="6"/>
+      <circle cx="192" cy="286" r="6"/>
+      <circle cx="96" cy="300" r="6"/>
+    </g>
+    <g fill="#5eead4" stroke="#5eead4">
+      <circle cx="268" cy="92" r="7.5"/>
+      <circle cx="240" cy="190" r="7.5"/>
+      <circle cx="304" cy="296" r="6.5"/>
+    </g>
+  </svg>
+
+  <div class="wrap">
+    <div class="eyebrow">Awesome &middot; Curated</div>
+    <div class="title">AI Agent Reliability<br>and <span class="accent">Auditing</span> Resources</div>
+    <div class="rule"></div>
+    <div class="tag">A curated list of papers, tools, datasets, and benchmarks for building, evaluating, and auditing reliable AI agents.</div>
+  </div>
+
+  <div class="meta">github.com/yzhao062/agent-reliability-resources</div>
+</body>
+</html>

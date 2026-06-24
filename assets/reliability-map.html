@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 540px; }
+  body {
+    font-family: "Segoe UI", -apple-system, system-ui, Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1100px 600px at 80% 10%, #182747 0%, #0d1526 58%, #0a111f 100%);
+    color: #e9eef7;
+    padding: 40px 48px;
+    position: relative;
+  }
+  .accentbar { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: linear-gradient(#5eead4, #38bdf8); }
+  .eyebrow { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: #8492ad; font-weight: 600; margin-bottom: 7px; }
+  .subtitle { font-size: 16px; color: #aab6cc; margin-bottom: 26px; }
+  .subtitle b { color: #5eead4; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .card {
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-top: 2px solid #5eead4;
+    border-radius: 12px;
+    padding: 20px 20px 22px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+    min-height: 186px;
+  }
+  .card .ic { color: #5eead4; display: block; }
+  .card .nm { font-size: 16.5px; font-weight: 700; color: #f4f7fc; margin-top: 15px; line-height: 1.2; }
+  .card .ph { font-size: 13px; color: #95a1b8; margin-top: 9px; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <div class="accentbar"></div>
+  <div class="eyebrow">The Reliability Map</div>
+  <div class="subtitle">What a reliable agent must deliver, from <b>build</b> to <b>run</b> to <b>review</b>.</div>
+
+  <div class="grid">
+    <div class="card">
+      <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      <div class="nm">Consistency &amp; Determinism</div>
+      <div class="ph">Same task, same decision. Runs reproducible enough to debug and to trust.</div>
+    </div>
+    <div class="card">
+      <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <div class="nm">Robustness</div>
+      <div class="ph">Behavior holds under perturbed input, adversarial prompts, and shifting tools.</div>
+    </div>
+    <div class="card">
+      <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.9" y1="4.9" x2="9.2" y2="9.2"/><line x1="14.8" y1="14.8" x2="19.1" y2="19.1"/><line x1="14.8" y1="9.2" x2="19.1" y2="4.9"/><line x1="4.9" y1="19.1" x2="9.2" y2="14.8"/></svg>
+      <div class="nm">Fault Tolerance &amp; Recovery</div>
+      <div class="ph">Degrade safely, contain the blast radius, return to a known-good state.</div>
+    </div>
+    <div class="card">
+      <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <div class="nm">Runtime Monitoring</div>
+      <div class="ph">Live signals surface risky behavior early enough to step in.</div>
+    </div>
+    <div class="card">
+      <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+      <div class="nm">Failure Attribution</div>
+      <div class="ph">Locate the step, agent, and root cause behind a bad outcome.</div>
+    </div>
+    <div class="card">
+      <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+      <div class="nm">Decision Records &amp; Accountability</div>
+      <div class="ph">A durable, inspectable record of each consequential action.</div>
+    </div>
+    <div class="card">
+      <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <div class="nm">Security Review</div>
+      <div class="ph">Injection, tool and data poisoning, privilege misuse, unsafe actions.</div>
+    </div>
+    <div class="card">
+      <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <div class="nm">Evaluation &amp; Benchmarks</div>
+      <div class="ph">Comparable, testable reliability metrics, not anecdotes.</div>
+    </div>
+  </div>
+</body>
+</html>
