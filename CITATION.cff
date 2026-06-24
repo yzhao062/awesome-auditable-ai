@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If this list is useful in your work, please cite it."
+title: "AI Agent Reliability and Auditing Resources"
+abstract: "A curated list of papers, tools, datasets, benchmarks, and standards for building, evaluating, and auditing reliable AI agents."
+type: dataset
+authors:
+  - family-names: Zhao
+    given-names: Yue
+    affiliation: "University of Southern California"
+url: "https://github.com/yzhao062/agent-reliability-resources"
+repository-code: "https://github.com/yzhao062/agent-reliability-resources"
+license: CC0-1.0
+date-released: "2026-06-23"
+version: "1.0.0"
+keywords:
+  - "AI agents"
+  - "LLM agents"
+  - "reliability"
+  - "auditing"
+  - "failure attribution"
+  - "runtime monitoring"
+  - "benchmarks"

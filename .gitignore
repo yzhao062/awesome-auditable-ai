@@ -1,0 +1,12 @@
+# Python (figure render helpers in assets/)
+__pycache__/
+*.pyc
+
+# Preview / scratch renders
+assets/_previews/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

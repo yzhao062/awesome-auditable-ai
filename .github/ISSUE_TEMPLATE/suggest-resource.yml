@@ -1,0 +1,51 @@
+name: Suggest a Resource
+description: Propose a paper, tool, dataset, benchmark, or standard to add to the list.
+title: "[Resource] "
+labels: ["resource suggestion"]
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Title
+      description: The title of the paper, tool, dataset, or standard.
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Link
+      description: A working link to the paper, repository, dataset, or specification.
+    validations:
+      required: true
+  - type: dropdown
+    id: section
+    attributes:
+      label: Section
+      description: Which section does this belong in?
+      options:
+        - Surveys and Foundations
+        - Failure Attribution and Diagnosis
+        - Reliability and Robustness
+        - Runtime Monitoring and Guardrails
+        - Audit Trails and Decision Records
+        - Security Auditing and Scanners
+        - Datasets and Benchmarks
+        - Tools and Platforms
+        - Standards and Governance
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: One-sentence summary
+      description: What does this resource do? State the function, not a sales pitch.
+    validations:
+      required: true
+  - type: input
+    id: venue
+    attributes:
+      label: Venue and year
+      description: For papers and datasets, for example "NeurIPS 2025" or "Preprint 2026". Leave blank for tools.
+    validations:
+      required: false

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Email the maintainer
+    url: mailto:yzhao010@usc.edu
+    about: For questions or suggestions that do not fit an issue template.
