@@ -7,8 +7,8 @@ authors:
   - family-names: Zhao
     given-names: Yue
     affiliation: "University of Southern California"
-url: "https://github.com/yzhao062/agent-reliability-resources"
-repository-code: "https://github.com/yzhao062/agent-reliability-resources"
+url: "https://github.com/yzhao062/awesome-auditable-ai"
+repository-code: "https://github.com/yzhao062/awesome-auditable-ai"
 license: CC0-1.0
 date-released: "2026-06-23"
 version: "1.0.0"

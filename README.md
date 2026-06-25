@@ -340,7 +340,7 @@ If this list is useful in your work, please cite it:
   title        = {AI Agent Reliability and Auditing Resources},
   author       = {Zhao, Yue},
   year         = {2026},
-  howpublished = {\url{https://github.com/yzhao062/agent-reliability-resources}},
+  howpublished = {\url{https://github.com/yzhao062/awesome-auditable-ai}},
   note         = {A curated list of resources for building, evaluating, and auditing reliable AI agents}
 }
 ```
