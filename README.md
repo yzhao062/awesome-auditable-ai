@@ -287,6 +287,8 @@ Open-source tools and platforms for agent observability, evaluation, and reliabi
 
 **[Managed] LangSmith** ([langchain.com/langsmith-platform](https://www.langchain.com/langsmith-platform)): framework-agnostic platform from the LangChain team for tracing, offline and online evaluation, and monitoring of LLM and agent applications. Commercial managed service, not self-hosted open source, 2023-present.
 
+**[Managed] SeaOtter** ([seaotter.ai](https://seaotter.ai?utm_source=github&utm_medium=awesome_list&utm_campaign=launch&utm_content=A-09-awesome-auditable-ai)): adversarial critic for AI agent outputs that grades a submitted output against an acceptance policy and returns pass/rework/fail with specific reasons. Enforces output acceptance before work ships; append-only HMAC-SHA256 hash-chained audit trail. Free submit flow at seaotter.ai/submit — no account required. Managed web service, 2026-present.
+
 **[Paper] RAGAs: Automated Evaluation of Retrieval Augmented Generation** (Es et al., EACL 2024 Demo): reference-free evaluation framework for retrieval-augmented generation pipelines, scoring faithfulness, answer relevance, and context quality; the basis of the open-source Ragas library. [[PDF]](https://aclanthology.org/2024.eacl-demo.16/), [[Code]](https://github.com/explodinggradients/ragas)
 
 ---
