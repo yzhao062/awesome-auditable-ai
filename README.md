@@ -326,13 +326,17 @@ Standards and governance instruments for agent reliability and accountability. P
 
 ## Related Projects
 
-Open-source projects for inspecting and controlling agent decisions, which compose across the agent lifecycle:
+The Auditable AI Ecosystem spans four cells across the agent lifecycle:
+
+- **[auditable](https://github.com/yzhao062/auditable)** (Tool cell): `auditable` is an open-source system of record for AI-agent decisions: it captures what each decision relied on, replays it against live state, and rolls back the committed action when it no longer holds.
+- **[GRADE](https://github.com/yzhao062/grade)** (Method cell): a two-layer graph representation of agent execution and dependency ([arXiv:2606.22741](https://arxiv.org/abs/2606.22741)).
+- **AuditableBench** (Benchmark cell, in development): a benchmark suite for evaluating auditable AI-agent systems.
+- **awesome-auditable-ai** (Knowledge cell): this curated list of papers, tools, datasets, benchmarks, and standards for reliable AI agents.
+
+Adjacent open-source tools in the same space:
 
 - **[agent-audit](https://github.com/HeadyZhang/agent-audit)**: static security scanner for agent code and MCP configuration, with rules mapped to the OWASP Agentic Top 10 (2026).
 - **[aegis](https://github.com/Justin0504/aegis)**: runtime policy enforcement with a cryptographic audit trail, human-in-the-loop approvals, and a kill switch.
-- **[auditable](https://github.com/yzhao062/auditable)**: SDK that captures a signed record of each agent decision and audits it across past, present, and future on one typed graph.
-
-The Reliability Map above draws on **[GRADE](https://github.com/yzhao062/grade)** ([arXiv:2606.22741](https://arxiv.org/abs/2606.22741)), a two-layer graph representation of agent execution and dependency.
 
 ---
 
