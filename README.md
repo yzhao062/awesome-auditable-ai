@@ -287,6 +287,8 @@ Open-source tools and platforms for agent observability, evaluation, and reliabi
 
 **[Managed] LangSmith** ([langchain.com/langsmith-platform](https://www.langchain.com/langsmith-platform)): framework-agnostic platform from the LangChain team for tracing, offline and online evaluation, and monitoring of LLM and agent applications. Commercial managed service, not self-hosted open source, 2023-present.
 
+**[Python] TRACE** ([agentrust-io/trace-spec](https://github.com/agentrust-io/trace-spec)): open specification and Python SDK for hardware-attested agent trust records that bind model, policy, data class, tool calls, and TEE attestation into one signed artifact a third party can verify offline, with a conformance test suite. CC BY 4.0 spec, Apache-2.0 tooling, 2026-present.
+
 **[Paper] RAGAs: Automated Evaluation of Retrieval Augmented Generation** (Es et al., EACL 2024 Demo): reference-free evaluation framework for retrieval-augmented generation pipelines, scoring faithfulness, answer relevance, and context quality; the basis of the open-source Ragas library. [[PDF]](https://aclanthology.org/2024.eacl-demo.16/), [[Code]](https://github.com/explodinggradients/ragas)
 
 ---
