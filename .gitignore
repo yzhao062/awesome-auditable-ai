@@ -13,3 +13,7 @@ Thumbs.db
 
 # Citation audit artifact (local only)
 REFERENCE-CHECK.md
+
+# Agent review artifacts (local only)
+Review-*.md
+PLAN-*.md

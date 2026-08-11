@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 640px; height: 320px; }
+  body {
+    font-family: "Segoe UI", -apple-system, system-ui, Roboto, Helvetica, Arial, sans-serif;
+    background:
+      radial-gradient(620px 420px at 78% 14%, #1b2a4d 0%, #0e1730 55%, #0a1020 100%);
+    color: #e9eef7;
+    position: relative;
+    overflow: hidden;
+  }
+  .frame { position: absolute; inset: 0; border: 1px solid rgba(255,255,255,0.06); }
+  .accentbar { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: linear-gradient(#1ab39d, #5c6bc0); }
+  .wrap { position: absolute; inset: 0; padding: 30px 38px 50px; display: flex; flex-direction: column; justify-content: center; }
+  .eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: #8492ad; font-weight: 600; margin-bottom: 11px; }
+  .title { font-size: 35px; line-height: 1.12; font-weight: 800; letter-spacing: -0.015em; color: #f4f7fc; max-width: 430px; }
+  .title .accent { color: #22b8a4; }
+  .rule { width: 46px; height: 3px; background: #22b8a4; border-radius: 2px; margin: 14px 0 12px; }
+  .tag { font-size: 13px; line-height: 1.45; color: #aab6cc; max-width: 395px; font-weight: 400; }
+  .stats { display: flex; gap: 24px; margin-top: 20px; }
+  .stat .n { font-size: 20px; font-weight: 700; color: #f4f7fc; letter-spacing: -0.01em; }
+  .stat .l { font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; color: #7b89a5; margin-top: 3px; font-weight: 600; }
+  .meta { position: absolute; left: 38px; bottom: 22px; font-size: 11px; color: #6c7a96; letter-spacing: 0.01em; }
+  svg.motif { position: absolute; right: 6px; top: 4px; height: 250px; width: 250px; opacity: 0.30; }
+</style>
+</head>
+<body>
+  <div class="frame"></div>
+  <div class="accentbar"></div>
+
+  <svg class="motif" viewBox="0 0 420 360" fill="none">
+    <g stroke="#3f5896" stroke-width="1.8">
+      <line x1="70" y1="84" x2="168" y2="54"/>
+      <line x1="168" y1="54" x2="268" y2="92"/>
+      <line x1="268" y1="92" x2="356" y2="62"/>
+      <line x1="168" y1="54" x2="132" y2="172"/>
+      <line x1="268" y1="92" x2="240" y2="190"/>
+      <line x1="356" y1="62" x2="344" y2="176"/>
+      <line x1="132" y1="172" x2="240" y2="190"/>
+      <line x1="240" y1="190" x2="344" y2="176"/>
+      <line x1="132" y1="172" x2="192" y2="286"/>
+      <line x1="240" y1="190" x2="304" y2="296"/>
+      <line x1="192" y1="286" x2="304" y2="296"/>
+      <line x1="132" y1="172" x2="96" y2="300"/>
+      <line x1="192" y1="286" x2="96" y2="300"/>
+    </g>
+    <g fill="#243a63" stroke="#4b6098" stroke-width="2">
+      <circle cx="70" cy="84" r="7"/>
+      <circle cx="168" cy="54" r="7"/>
+      <circle cx="356" cy="62" r="7"/>
+      <circle cx="132" cy="172" r="7"/>
+      <circle cx="344" cy="176" r="7"/>
+      <circle cx="192" cy="286" r="7"/>
+      <circle cx="96" cy="300" r="7"/>
+    </g>
+    <g stroke-width="0">
+      <circle cx="268" cy="92" r="9" fill="#7c8cf0"/>
+      <circle cx="240" cy="190" r="9" fill="#22b8a4"/>
+      <circle cx="304" cy="296" r="8" fill="#ef6a4f"/>
+    </g>
+  </svg>
+
+  <div class="wrap">
+    <div class="eyebrow">Awesome &middot; Curated</div>
+    <div class="title">AI Agent Reliability<br>and <span class="accent">Auditing</span></div>
+    <div class="rule"></div>
+    <div class="tag">Papers, tools, datasets, benchmarks, and standards for reliable AI agents.</div>
+
+    <div class="stats">
+      <div class="stat"><div class="n">181</div><div class="l">Entries</div></div>
+      <div class="stat"><div class="n">128</div><div class="l">arXiv papers</div></div>
+      <div class="stat"><div class="n">82</div><div class="l">Repos</div></div>
+      <div class="stat"><div class="n">124</div><div class="l">Titles checked</div></div>
+    </div>
+  </div>
+
+  <div class="meta">github.com/yzhao062/awesome-auditable-ai</div>
+</body>
+</html>

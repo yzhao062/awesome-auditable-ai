@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If this list is useful in your work, please cite it."
 title: "AI Agent Reliability and Auditing Resources"
-abstract: "A curated list of papers, tools, datasets, benchmarks, and standards for building, evaluating, and auditing reliable AI agents."
+abstract: "A curated list of resources for building, evaluating, and auditing reliable AI agents."
 type: dataset
 authors:
   - family-names: Zhao
@@ -9,9 +9,9 @@ authors:
     affiliation: "University of Southern California"
 url: "https://github.com/yzhao062/awesome-auditable-ai"
 repository-code: "https://github.com/yzhao062/awesome-auditable-ai"
+# After v1.0 is archived on Zenodo, add its DOI here in this form:
+# doi: "10.5281/zenodo.XXXXXXX"
 license: CC0-1.0
-date-released: "2026-06-23"
-version: "1.0.0"
 keywords:
   - "AI agents"
   - "LLM agents"
@@ -22,3 +22,12 @@ keywords:
   - "benchmarks"
   - "agentic AI"
   - "auditable"
+preferred-citation:
+  type: generic
+  title: "AI Agent Reliability and Auditing Resources"
+  authors:
+    - family-names: Zhao
+      given-names: Yue
+  year: 2026
+  url: "https://github.com/yzhao062/awesome-auditable-ai"
+  notes: "A curated list of resources for building, evaluating, and auditing reliable AI agents."

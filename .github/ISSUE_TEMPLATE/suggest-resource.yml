@@ -1,5 +1,5 @@
 name: Suggest a Resource
-description: Propose a paper, tool, dataset, benchmark, or standard to add to the list.
+description: Propose a paper, tool, dataset, benchmark, standard, or framework to add to the list.
 title: "[Resource] "
 labels: ["resource suggestion"]
 body:
@@ -7,14 +7,27 @@ body:
     id: title
     attributes:
       label: Title
-      description: The title of the paper, tool, dataset, or standard.
+      description: The title of the paper, tool, dataset, benchmark, standard, or framework.
     validations:
       required: true
   - type: input
     id: link
     attributes:
-      label: Link
-      description: A working link to the paper, repository, dataset, or specification.
+      label: Primary link
+      description: Use an arXiv or published-venue page for a paper, the official repository or landing page for a dataset or benchmark, an inspectable public source repository for a tool, or the official specification or issuing organization for a standard or framework.
+    validations:
+      required: true
+  - type: dropdown
+    id: resource-type
+    attributes:
+      label: Resource type
+      description: What kind of resource is this?
+      options:
+        - Paper
+        - Dataset or benchmark
+        - Tool
+        - Standard or framework
+        - Not sure
     validations:
       required: true
   - type: dropdown
@@ -27,11 +40,17 @@ body:
         - Failure Attribution and Diagnosis
         - Reliability and Robustness
         - Runtime Monitoring and Guardrails
+        - Guardrail Tools
         - Audit Trails and Decision Records
+        - Decision-Record Tools
         - Security Auditing and Scanners
+        - MCP and Skill Supply Chain
+        - Scanners
         - Datasets and Benchmarks
+        - Evaluation Integrity (Judges and Benchmark Gaming)
         - Tools and Platforms
         - Standards and Governance
+        - Standards and Frameworks
         - Not sure
     validations:
       required: true
@@ -43,9 +62,24 @@ body:
     validations:
       required: true
   - type: input
-    id: venue
+    id: resource-metadata
     attributes:
-      label: Venue and year
-      description: For papers and datasets, for example "NeurIPS 2025" or "Preprint 2026". Leave blank for tools.
+      label: Venue or resource metadata
+      description: For a paper or dataset, give the venue and year using the CONTRIBUTING.md convention. For a tool, give its license and activity period. For a standard or framework, give its issuing body and current version, revision, or year.
+    validations:
+      required: true
+  - type: input
+    id: additional-links
+    attributes:
+      label: Additional artifact links
+      description: Optional. Provide canonical Code, Data, Model, Paper, PDF, Paper List, or Project links and identify each label.
     validations:
       required: false
+  - type: checkboxes
+    id: inclusion-check
+    attributes:
+      label: Inclusion check
+      description: Confirm that the suggestion meets the scope and inclusion bar in CONTRIBUTING.md.
+      options:
+        - label: The primary link and resource type meet the repository's inclusion requirements.
+          required: true
