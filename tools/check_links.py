@@ -21,11 +21,24 @@ balanced parentheses inside destinations, and skips fenced code blocks and HTML 
 HTML ``src``/``href`` attributes and autolinks are included; a URL that appears only inside a
 fenced code block (the BibTeX snippet, for example) is not a link and is not counted.
 
-The command exits non-zero when a title or identifier disagrees, or when a destination fails
-to resolve and is not in ``KNOWN_BOT_WALLS`` below, so it is usable as a CI gate.
+Titles agree only when they are identical after normalization. A high character-similarity
+score is not treated as agreement, because that is exactly what a link to the wrong paper in a
+series looks like: "Part I" against "Part II" scores 0.995. A difference confined to a number,
+a roman numeral, or a word such as "Part" is reported as a disagreement whatever the score.
+
+The command exits non-zero when a title or identifier disagrees. Under the default ``strict``
+failure policy it also fails for every unresolved destination whose exact (URL, status) pair is
+not recorded in ``KNOWN_BOT_WALLS`` below, and for any arXiv page that returned a body but
+yielded no usable metadata, since that means the check could not run rather than that it
+passed. The ``pull-request`` policy fails for non-retryable 4xx responses and for hostnames that
+do not resolve, while reporting genuinely transient network failures as warnings.
+
+A resolved destination is one answering 200 or 206; 206 is a success status, not a failure.
 
 Usage:
     python tools/check_links.py [README.md] [-o LINK-AUDIT.md] [--delay 0.25]
+                                [--timeout 30] [--retries 0] [--retry-backoff 1]
+                                [--failure-policy strict|pull-request]
 
 Requires the standard library only. Network access is required.
 """
@@ -35,8 +48,10 @@ import datetime
 import difflib
 import html
 import re
+import socket
 import sys
 import time
+from html.parser import HTMLParser
 import urllib.error
 import urllib.request
 from collections import Counter
@@ -48,18 +63,31 @@ UA = (
 
 # Destinations known to refuse automated requests while being reachable in a browser. Each
 # entry is an explicit, inspectable exception rather than a blanket tolerance for non-200.
+# Each entry excuses ONE specific status for ONE destination. The status is part of the key so
+# that a genuine outage at an excused URL (a DNS failure, a timeout, a 404) is still a failure
+# rather than being masked by the exemption.
 KNOWN_BOT_WALLS = {
-    "https://www.iso.org/standard/42001":
+    ("https://www.iso.org/standard/42001", 403):
         "ISO returns 403 to non-browser clients; verified by hand in a browser.",
-    "https://eur-lex.europa.eu/eli/reg/2026/1744/oj":
+    ("https://eur-lex.europa.eu/eli/reg/2026/1744/oj", 202):
         "EUR-Lex answers non-browser clients with an empty 202 from its JavaScript gateway; the "
         "cited act (Digital Omnibus on AI, in force 27 July 2026) was confirmed against the "
         "European Commission announcement and independent legal summaries.",
 }
 
-ARXIV_ABS_RE = re.compile(r"arxiv\.org/abs/(\d{4}\.\d{4,5})")
-META_ID_RE = re.compile(r'name="citation_arxiv_id"\s+content="([^"]*)"')
-META_TITLE_RE = re.compile(r'name="citation_title"\s+content="([^"]*)"')
+# Modern identifiers (2612.34567) and legacy category identifiers (hep-th/9901001) are both
+# real arXiv references, so both must enter verification rather than being skipped silently.
+ARXIV_ABS_RE = re.compile(r"arxiv\.org/abs/(\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?/\d{7})")
+
+# Tokens that carry the difference between two genuinely different papers whose titles are
+# otherwise nearly identical, such as "Part I" against "Part II". A character-similarity score
+# cannot separate those, so a difference confined to one of these tokens is a disagreement no
+# matter how high the score.
+DISCRIMINATIVE_WORDS = {
+    "part", "parts", "volume", "vol", "extended", "revisited", "supplement",
+    "supplementary", "appendix", "errata", "corrigendum", "addendum", "erratum",
+}
+ROMAN_NUMERALS = {"i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"}
 
 # Link labels that are navigation, not paper titles. Compared after bracket/escape stripping.
 RESERVED_LABELS = {
@@ -69,6 +97,13 @@ RESERVED_LABELS = {
 
 MATCH_STRONG = 0.92   # at or above: titles agree
 MATCH_WEAK = 0.80     # between weak and strong: agree loosely, listed for a human to confirm
+
+RETRYABLE_HTTP_STATUSES = {408, 425, 429}
+TRANSIENT_ERROR_NAMES = {
+    "ConnectionAbortedError", "ConnectionRefusedError", "ConnectionResetError",
+    "IncompleteRead", "OSError", "RemoteDisconnected", "SSLError", "TimeoutError",
+    "URLError", "gaierror",
+}
 
 
 # --------------------------------------------------------------------------- extraction
@@ -188,10 +223,41 @@ def extract_links(readme):
     return found
 
 
+GREEK_NAMES = {
+    "α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta", "ε": "epsilon", "ζ": "zeta",
+    "η": "eta", "θ": "theta", "ι": "iota", "κ": "kappa", "λ": "lambda", "μ": "mu",
+    "ν": "nu", "ξ": "xi", "π": "pi", "ρ": "rho", "σ": "sigma", "τ": "tau",
+    "υ": "upsilon", "φ": "phi", "χ": "chi", "ψ": "psi", "ω": "omega",
+    "Α": "alpha", "Β": "beta", "Γ": "gamma", "Δ": "delta", "Θ": "theta", "Λ": "lambda",
+    "Ξ": "xi", "Π": "pi", "Σ": "sigma", "Φ": "phi", "Ψ": "psi", "Ω": "omega",
+}
+SUPERSUB_DIGITS = {
+    "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7",
+    "⁸": "8", "⁹": "9", "₀": "0", "₁": "1", "₂": "2", "₃": "3", "₄": "4", "₅": "5",
+    "₆": "6", "₇": "7", "₈": "8", "₉": "9",
+}
+
+
 def normalize_title(value):
-    """Fold a title to a comparable form: unescaped, de-punctuated, lowercase, collapsed."""
+    """Fold a title to a comparable form: unescaped, de-punctuated, lowercase, collapsed.
+
+    arXiv reports titles in LaTeX while this list writes them in Unicode, so ``$\\tau^2$-Bench``
+    and ``τ²-Bench`` must fold to the same string. Both notations are mapped to plain ASCII
+    before comparison, otherwise the superscript digit looks like a distinguishing number and
+    a formatting difference is reported as a wrong paper.
+    """
     value = html.unescape(value or "")
     value = value.replace("\\[", "[").replace("\\]", "]")
+    for symbol, name in GREEK_NAMES.items():
+        value = value.replace(symbol, name)
+    for symbol, digit in SUPERSUB_DIGITS.items():
+        value = value.replace(symbol, digit)
+    # LaTeX math: drop the delimiters and structural characters, keep the command name so
+    # \tau becomes tau and lines up with the Unicode form mapped above.
+    value = re.sub(r"\\(?:left|right|mathrm|mathbf|mathcal|text|texttt|emph)\b", " ", value)
+    value = re.sub(r"\\([A-Za-z]+)", r"\1", value)
+    value = value.replace("$", "").replace("^", "").replace("_", "")
+    value = value.replace("{", "").replace("}", "")
     value = value.replace("&", " and ")
     value = re.sub(r"[^0-9A-Za-z]+", " ", value)
     return " ".join(value.lower().split())
@@ -211,17 +277,100 @@ def is_title_label(label):
 
 # --------------------------------------------------------------------------- network
 
-def fetch(url, timeout=30):
-    """Return ``(status, body)``. Status is an int, or a short exception name on failure."""
+def is_retryable_status(status):
+    """Return whether a response is likely to succeed when repeated shortly afterward."""
+    if isinstance(status, int):
+        return status in RETRYABLE_HTTP_STATUSES or 500 <= status < 600
+    return status in TRANSIENT_ERROR_NAMES
+
+
+def is_pull_request_failure(status):
+    """Return whether an unresolved status should block a pull request."""
+    if isinstance(status, int):
+        return 400 <= status < 500 and not is_retryable_status(status)
+    return not is_retryable_status(status)
+
+
+def _fetch_once(url, timeout):
+    """Return ``(status, body)`` for one request.
+
+    A hostname that does not resolve is reported as ``DNSError`` rather than the generic
+    ``URLError``, because a typo in a hostname is the most common way a contributor breaks a
+    link and it must not be excused as a transient network condition.
+    """
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            raw = resp.read(300_000)
+            # Generous cap: a truncated body looks identical to a page with no metadata, which
+            # would turn a real disagreement into a silent "unverified".
+            raw = resp.read(2_000_000)
             return resp.status, raw.decode("utf-8", "ignore")
     except urllib.error.HTTPError as exc:
         return exc.code, ""
+    except urllib.error.URLError as exc:
+        if isinstance(getattr(exc, "reason", None), socket.gaierror):
+            return "DNSError", ""
+        reason = getattr(exc, "reason", None)
+        return type(reason).__name__ if isinstance(reason, Exception) else "URLError", ""
     except Exception as exc:
         return type(exc).__name__, ""
+
+
+class _MetaReader(HTMLParser):
+    """Collect ``citation_*`` meta tags without caring about attribute order or quote style."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.meta = {}
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() != "meta":
+            return
+        found = {key.lower(): (value or "") for key, value in attrs}
+        name = (found.get("name") or found.get("property") or "").lower()
+        if name.startswith("citation_"):
+            self.meta.setdefault(name, found.get("content", ""))
+
+
+def read_citation_meta(body):
+    """Return the ``citation_*`` meta tags in ``body`` as a dict."""
+    reader = _MetaReader()
+    try:
+        reader.feed(body)
+    except Exception:
+        pass
+    return reader.meta
+
+
+def compare_titles(ours, theirs):
+    """Return ``(verdict, ratio)`` for two titles, where verdict is match, near, or MISMATCH.
+
+    Only an exact match after normalization counts as agreement. Anything else is surfaced,
+    because a high character-similarity score is exactly what a wrong-paper link looks like.
+    """
+    left, right = normalize_title(ours), normalize_title(theirs)
+    ratio = difflib.SequenceMatcher(None, left, right).ratio()
+    if left == right:
+        return "match", ratio
+    difference = set(left.split()) ^ set(right.split())
+    decisive = {
+        token for token in difference
+        if token.isdigit() or token in ROMAN_NUMERALS or token in DISCRIMINATIVE_WORDS
+    }
+    if decisive:
+        return "MISMATCH", ratio
+    return ("near", ratio) if ratio >= MATCH_WEAK else ("MISMATCH", ratio)
+
+
+def fetch(url, timeout=30, retries=0, retry_backoff=1.0):
+    """Fetch a URL, retrying transient results, and return ``(status, body)``."""
+    for attempt in range(retries + 1):
+        status, body = _fetch_once(url, timeout)
+        if attempt == retries or not is_retryable_status(status):
+            return status, body
+        wait = retry_backoff * (2 ** attempt)
+        print("retrying %s after status %s in %.1fs" % (url, status, wait), file=sys.stderr)
+        time.sleep(wait)
 
 
 # --------------------------------------------------------------------------- report
@@ -231,7 +380,19 @@ def main():
     ap.add_argument("readme", nargs="?", default="README.md")
     ap.add_argument("-o", "--out", default="LINK-AUDIT.md")
     ap.add_argument("--delay", type=float, default=0.25)
+    ap.add_argument("--timeout", type=float, default=30)
+    ap.add_argument("--retries", type=int, default=0)
+    ap.add_argument("--retry-backoff", type=float, default=1.0)
+    ap.add_argument("--failure-policy", choices=("strict", "pull-request"), default="strict")
     args = ap.parse_args()
+    if args.delay < 0:
+        ap.error("--delay must be non-negative")
+    if args.timeout <= 0:
+        ap.error("--timeout must be positive")
+    if args.retries < 0:
+        ap.error("--retries must be non-negative")
+    if args.retry_backoff < 0:
+        ap.error("--retry-backoff must be non-negative")
 
     links = extract_links(args.readme)
     labels_by_url = {}
@@ -247,7 +408,12 @@ def main():
     title_mismatches, id_mismatches, title_unverified = [], [], []
 
     for index, url in enumerate(urls, 1):
-        status, body = fetch(url)
+        status, body = fetch(
+            url,
+            timeout=args.timeout,
+            retries=args.retries,
+            retry_backoff=args.retry_backoff,
+        )
         id_result = title_result = "n/a"
         detail = ""
         arxiv = ARXIV_ABS_RE.search(url)
@@ -258,41 +424,44 @@ def main():
                 detail = "page could not be read (status %s)" % status
                 title_unverified.append((url, detail))
             else:
+                meta = read_citation_meta(body)
                 id_checked += 1
-                meta_id = META_ID_RE.search(body)
-                if meta_id and meta_id.group(1).split("v")[0] == arxiv.group(1):
+                meta_id = meta.get("citation_arxiv_id")
+                if meta_id and meta_id.split("v")[0] == arxiv.group(1):
                     id_matched += 1
                     id_result = "match"
                 elif meta_id:
                     id_result = "MISMATCH"
-                    detail = "page reports identifier %s" % meta_id.group(1)
+                    detail = "page reports identifier %s" % meta_id
                     id_mismatches.append((url, detail))
                 else:
                     id_absent += 1
                     id_result = "unverified"
                     detail = "no citation_arxiv_id meta tag"
+                    title_unverified.append((url, "no citation_arxiv_id meta tag"))
 
-                title_label = next((l for l in labels_by_url[url] if is_title_label(l)), None)
-                meta_title = META_TITLE_RE.search(body)
-                if title_label and meta_title:
-                    title_checked += 1
-                    ours = normalize_title(title_label)
-                    theirs = normalize_title(meta_title.group(1))
-                    ratio = difflib.SequenceMatcher(None, ours, theirs).ratio()
-                    if ratio >= MATCH_STRONG:
-                        title_matched += 1
-                        title_result = "match"
-                    elif ratio >= MATCH_WEAK:
-                        title_weak += 1
-                        title_result = "near (%.2f)" % ratio
-                        detail = (detail + "; " if detail else "") + \
-                            'page title "%s"' % html.unescape(meta_title.group(1))
-                    else:
-                        title_result = "MISMATCH (%.2f)" % ratio
-                        detail = (detail + "; " if detail else "") + \
-                            'page title "%s"' % html.unescape(meta_title.group(1))
-                        title_mismatches.append((url, title_label, html.unescape(meta_title.group(1)), ratio))
-                elif title_label:
+                # Every title label pointing at this destination is checked, not just the
+                # first: a correct first occurrence must not hide a wrong later one.
+                title_labels = [l for l in labels_by_url[url] if is_title_label(l)]
+                page_title = meta.get("citation_title")
+                if title_labels and page_title:
+                    shown = html.unescape(page_title)
+                    verdicts = [(l, ) + compare_titles(l, page_title) for l in title_labels]
+                    title_checked += len(verdicts)
+                    worst = min(verdicts, key=lambda v: (v[1] == "MISMATCH" and 0
+                                                         or v[1] == "near" and 1 or 2, v[2]))
+                    for label, verdict, ratio in verdicts:
+                        if verdict == "MISMATCH":
+                            title_mismatches.append((url, label, shown, ratio))
+                        elif verdict == "near":
+                            title_weak += 1
+                        else:
+                            title_matched += 1
+                    title_result = ("match" if worst[1] == "match"
+                                    else "%s (%.2f)" % (worst[1], worst[2]))
+                    if worst[1] != "match":
+                        detail = (detail + "; " if detail else "") + 'page title "%s"' % shown
+                elif title_labels:
                     title_result = "unverified"
                     title_unverified.append((url, "no citation_title meta tag"))
                 else:
@@ -300,11 +469,14 @@ def main():
 
         rows.append((url, status, id_result, title_result, detail))
         print("[%d/%d] %s %s %s" % (index, len(urls), status, id_result, url), file=sys.stderr)
-        time.sleep(args.delay)
+        if index < len(urls):
+            time.sleep(args.delay)
 
     resolved = [r for r in rows if r[1] in (200, 206)]
     unresolved = [r for r in rows if r[1] not in (200, 206)]
-    unexpected = [r for r in unresolved if r[0] not in KNOWN_BOT_WALLS]
+    unexpected = [r for r in unresolved if (r[0], r[1]) not in KNOWN_BOT_WALLS]
+    pr_blocking = [r for r in unexpected if is_pull_request_failure(r[1])]
+    pr_warnings = [r for r in unexpected if not is_pull_request_failure(r[1])]
     today = datetime.date.today().isoformat()
 
     lines = [
@@ -317,10 +489,14 @@ def main():
         "| Field | Value |",
         "|---|---|",
         "| Audit date | %s |" % today,
+        "| Failure policy | `%s` |" % args.failure_policy,
         "| Distinct link destinations | %d |" % len(rows),
         "| Resolved (200 or 206) | %d |" % len(resolved),
         "| Did not resolve | %d |" % len(unresolved),
         "| Unresolved and not a known bot wall | %d |" % len(unexpected),
+        "| PR-blocking unresolved (non-retryable 4xx or non-network error) | %d |"
+        % len(pr_blocking),
+        "| PR-warning unresolved (transient or other status) | %d |" % len(pr_warnings),
         "| arXiv titles compared with `citation_title` | %d |" % title_checked,
         "| arXiv titles agreeing | %d |" % title_matched,
         "| arXiv titles agreeing loosely (listed below) | %d |" % title_weak,
@@ -329,6 +505,7 @@ def main():
         "| arXiv identifiers agreeing | %d |" % id_matched,
         "| arXiv identifiers with no meta tag | %d |" % id_absent,
         "| arXiv identifier disagreements | %d |" % len(id_mismatches),
+        "| arXiv pages where a check could not run (unverified) | %d |" % len({u for u, _ in title_unverified}),
         "",
         "## What This Checks, and What It Does Not",
         "",
@@ -338,11 +515,19 @@ def main():
         "entry pointing at a real but different paper.",
         "",
         "Not checked: whether a summary sentence fairly describes the linked work, whether a venue",
-        "field is correct, or whether a non-arXiv destination contains the claimed content. Titles",
-        "are compared after case folding and punctuation removal, so a formatting difference does",
-        "not register as a disagreement; a row scoring between %.2f and %.2f is listed below for a"
-        % (MATCH_WEAK, MATCH_STRONG),
-        "human to confirm rather than being counted as agreement.",
+        "field is correct, or whether a non-arXiv destination contains the claimed content.",
+        "",
+        "Titles count as agreeing only when they are identical after case folding and punctuation",
+        "removal, so a near-identical title is never silently accepted. A remaining difference of",
+        "%.2f similarity or better is listed under Titles Agreeing Loosely for a human to confirm."
+        % MATCH_WEAK,
+        "A difference confined to a number, a roman numeral, or a word such as Part is treated as a",
+        "disagreement at any similarity score, because that is the shape of a link to the wrong",
+        "paper in a series.",
+        "",
+        "The strict failure policy rejects every unexpected unresolved destination. The pull-request",
+        "policy rejects non-retryable 4xx responses and non-network exceptions, but treats exhausted",
+        "timeouts, connection errors, 408, 425, 429, 5xx, and other HTTP statuses as warnings.",
         "",
     ]
 
@@ -373,13 +558,14 @@ def main():
         lines += [
             "A non-200 result is not automatically a dead link: some publishers refuse automated",
             "requests. Destinations listed in `KNOWN_BOT_WALLS` in `tools/check_links.py` carry a",
-            "recorded reason and were confirmed by hand. Any other row here fails the command.",
+            "recorded reason and were confirmed by hand. The strict policy fails every other row;",
+            "the pull-request policy applies the narrower rule described above.",
             "",
             "| Status | URL | Note |",
             "|---|---|---|",
         ]
         lines += [
-            "| %s | %s | %s |" % (s, u, KNOWN_BOT_WALLS.get(u, "not a recorded exception"))
+            "| %s | %s | %s |" % (s, u, KNOWN_BOT_WALLS.get((u, s), "not a recorded exception"))
             for u, s, _, _, _ in unresolved
         ] + [""]
     else:
@@ -403,9 +589,20 @@ def main():
     with open(args.out, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(lines))
 
-    failures = len(title_mismatches) + len(id_mismatches) + len(unexpected)
-    print("wrote %s: %d destinations, %d resolved, %d title checks, %d failures"
-          % (args.out, len(rows), len(resolved), title_checked, failures))
+    # An arXiv page that returned 200 but yielded no usable metadata is not a pass: it means the
+    # check could not run. Under the strict policy that counts as a failure so a markup change
+    # cannot quietly turn the whole audit green. Counted per destination, since one page can
+    # be missing both the identifier and the title tag.
+    unverified_urls = {u for u, _ in title_unverified}
+    reachability_failures = unexpected if args.failure_policy == "strict" else pr_blocking
+    unverified_failures = len(unverified_urls) if args.failure_policy == "strict" else 0
+    failures = (len(title_mismatches) + len(id_mismatches)
+                + len(reachability_failures) + unverified_failures)
+    warnings = len(pr_warnings) if args.failure_policy == "pull-request" else 0
+    print("wrote %s: %d destinations, %d resolved, %d title checks, %d unverified, "
+          "%d failures, %d warnings"
+          % (args.out, len(rows), len(resolved), title_checked,
+             len(unverified_urls), failures, warnings))
     return 1 if failures else 0
 
 

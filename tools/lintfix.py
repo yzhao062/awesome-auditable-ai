@@ -8,8 +8,11 @@ import re
 from pathlib import Path
 
 
-TITLE = (
-    "# Awesome AI Agent Reliability and Auditing "
+# Used only when the document has no H1 at all. The existing H1 is preserved otherwise, so
+# renaming the list does not leave a stale heading behind: hard-coding the title here once
+# caused a rename to produce two H1 headings, with the stale one rendered first.
+DEFAULT_TITLE = (
+    "# Awesome Auditable AI "
     "[![Awesome](https://awesome.re/badge-flat2.svg)](https://awesome.re)"
 )
 STANDALONE_AWESOME_BADGE = (
@@ -192,9 +195,22 @@ def format_tables(lines: list[str]) -> list[str]:
 
 def add_title_and_fix_badges(lines: list[str]) -> list[str]:
     cleaned: list[str] = []
+    title: str | None = None
+    fence: str | None = None
     for line in lines:
-        if line == TITLE or line.strip() == STANDALONE_AWESOME_BADGE:
-            continue
+        opener = re.match(r"(`{3,}|~{3,})", line.lstrip())
+        if fence is None and opener:
+            fence = opener.group(1)[0]
+        elif fence is not None and opener and opener.group(1)[0] == fence:
+            fence = None
+        elif fence is None:
+            # Take the document's own H1 rather than imposing one, and never treat a heading
+            # inside a fenced code block as the document title.
+            if title is None and line.startswith("# "):
+                title = line.rstrip()
+                continue
+            if line.strip() == STANDALONE_AWESOME_BADGE:
+                continue
         if (
             line.strip().startswith("**[Reliability Map](#the-reliability-map)**")
             and "&nbsp;&middot;&nbsp;" in line
@@ -210,7 +226,11 @@ def add_title_and_fix_badges(lines: list[str]) -> list[str]:
 
     while cleaned and not cleaned[0].strip():
         cleaned.pop(0)
-    return [TITLE, "", *cleaned]
+    if title is None:
+        title = DEFAULT_TITLE
+    elif STANDALONE_AWESOME_BADGE not in title:
+        title = "%s %s" % (title, STANDALONE_AWESOME_BADGE)
+    return [title, "", *cleaned]
 
 
 def replace_contents(text: str) -> str:
@@ -325,17 +345,41 @@ def retarget_cross_listings(lines: list[str]) -> list[str]:
     return result
 
 
+def _protect_code(text: str) -> tuple[str, list[str]]:
+    """Replace fenced blocks and inline code spans with placeholders.
+
+    Escaping runs as a text substitution, so without this it also rewrites Markdown that a
+    code span is quoting verbatim, turning documentation of a syntax into a corrupted example.
+    """
+    stash: list[str] = []
+
+    def stash_match(match: re.Match) -> str:
+        stash.append(match.group(0))
+        return "\x00CODE%d\x00" % (len(stash) - 1)
+
+    text = re.sub(r"(?ms)^(?:```|~~~).*?^(?:```|~~~)[^\n]*$", stash_match, text)
+    return re.sub(r"`+[^`\n]*`+", stash_match, text), stash
+
+
+def _restore_code(text: str, stash: list[str]) -> str:
+    for index, original in enumerate(stash):
+        text = text.replace("\x00CODE%d\x00" % index, original)
+    return text
+
+
 def escape_undefined_references(text: str) -> str:
+    text, stash = _protect_code(text)
     text = re.sub(
         r"(?<!\\)\[\[([^]\n]+)\]\]\(",
         r"[\[\1\]](",
         text,
     )
-    return re.sub(
+    text = re.sub(
         r"(?m)^(\s*(?:-\s+)?\*\*)\[([^]\n]+)\]",
         r"\1\[\2\]",
         text,
     )
+    return _restore_code(text, stash)
 
 
 def transform(text: str) -> str:

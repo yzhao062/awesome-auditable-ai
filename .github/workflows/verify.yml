@@ -1,0 +1,327 @@
+name: Verify README
+
+on:
+  pull_request:
+    paths:
+      - README.md
+      - "tools/**"
+  schedule:
+    - cron: "23 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-readme-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pull-request:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out pull request
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run tool tests
+        shell: bash
+        run: |
+          python -m unittest discover -s tools -p "test_*.py" -v
+
+      - name: Recompute README inventory
+        shell: bash
+        run: |
+          inventory_file="$RUNNER_TEMP/inventory.txt"
+          python tools/inventory.py README.md > "$inventory_file"
+          cat "$inventory_file"
+          {
+            echo "## README inventory"
+            echo
+            echo "Counts recomputed from this pull request:"
+            echo
+            echo '```text'
+            cat "$inventory_file"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check links and arXiv metadata
+        shell: bash
+        run: |
+          report="$RUNNER_TEMP/pr-link-audit.md"
+          audit_log="$RUNNER_TEMP/pr-link-audit.log"
+          set +e
+          python tools/check_links.py README.md \
+            --out "$report" \
+            --delay 0.10 \
+            --timeout 15 \
+            --retries 2 \
+            --retry-backoff 1 \
+            --failure-policy pull-request 2>&1 | tee "$audit_log"
+          audit_status="${PIPESTATUS[0]}"
+          set -e
+
+          if [[ -f "$report" ]]; then
+            python - "$report" >> "$GITHUB_STEP_SUMMARY" <<'PY'
+          import pathlib
+          import sys
+
+          text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+
+          def section(title):
+              marker = "## " + title
+              start = text.index(marker)
+              end = text.find("\n## ", start + len(marker))
+              return text[start:end if end != -1 else None]
+
+          print("## Link verification")
+          print()
+          for title in (
+              "Summary",
+              "Title Disagreements",
+              "Identifier Disagreements",
+              "Destinations That Did Not Return 200",
+          ):
+              print(section(title).replace("## ", "### ", 1))
+              print()
+          PY
+          else
+            {
+              echo "## Link verification"
+              echo
+              echo "The checker exited before writing its report. Its final output follows:"
+              echo
+              echo '```text'
+              tail -n 80 "$audit_log"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          warning_count=0
+          if [[ -f "$report" ]]; then
+            warning_count="$(awk -F '|' '/PR-warning unresolved/ {gsub(/[[:space:]]/, "", $3); print $3}' "$report")"
+          fi
+          if [[ "${warning_count:-0}" != "0" ]]; then
+            echo "::warning title=Transient link results::${warning_count} unresolved destinations were warnings after retries; see the job summary."
+          fi
+          if [[ "$audit_status" != "0" ]]; then
+            echo "::error title=Link verification failed::An arXiv disagreement, non-retryable 4xx response, or non-network error was found; see the job summary."
+          fi
+          exit "$audit_status"
+
+  scheduled-audit:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run tool tests
+        shell: bash
+        run: |
+          python -m unittest discover -s tools -p "test_*.py" -v
+
+      - name: Recompute README inventory
+        shell: bash
+        run: |
+          inventory_file="$RUNNER_TEMP/inventory.txt"
+          python tools/inventory.py README.md > "$inventory_file"
+          cat "$inventory_file"
+          {
+            echo "## README inventory"
+            echo
+            echo '```text'
+            cat "$inventory_file"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Regenerate strict link audit
+        id: audit
+        shell: bash
+        run: |
+          audit_log="$RUNNER_TEMP/link-audit.log"
+          set +e
+          python tools/check_links.py README.md \
+            --out LINK-AUDIT.md \
+            --delay 0.10 \
+            --timeout 15 \
+            --retries 2 \
+            --retry-backoff 1 \
+            --failure-policy strict 2>&1 | tee "$audit_log"
+          audit_status="${PIPESTATUS[0]}"
+          set -e
+
+          if git diff --quiet \
+            --ignore-matching-lines='^[|] Audit date [|]' \
+            -- LINK-AUDIT.md; then
+            report_changed=false
+          else
+            report_changed=true
+          fi
+
+          echo "exit_code=$audit_status" >> "$GITHUB_OUTPUT"
+          echo "report_changed=$report_changed" >> "$GITHUB_OUTPUT"
+
+          python - LINK-AUDIT.md >> "$GITHUB_STEP_SUMMARY" <<'PY'
+          import pathlib
+          import sys
+
+          text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+
+          def section(title):
+              marker = "## " + title
+              start = text.index(marker)
+              end = text.find("\n## ", start + len(marker))
+              return text[start:end if end != -1 else None]
+
+          print("## Strict link audit")
+          print()
+          for title in (
+              "Summary",
+              "Title Disagreements",
+              "Identifier Disagreements",
+              "Destinations That Did Not Return 200",
+          ):
+              print(section(title).replace("## ", "### ", 1))
+              print()
+          PY
+
+      - name: Open or update audit issue
+        if: steps.audit.outputs.report_changed == 'true' || steps.audit.outputs.exit_code != '0'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          AUDIT_EXIT_CODE: ${{ steps.audit.outputs.exit_code }}
+          REPORT_CHANGED: ${{ steps.audit.outputs.report_changed }}
+        run: |
+          diff_file="$RUNNER_TEMP/link-audit.diff"
+          issue_body="$RUNNER_TEMP/link-audit-issue.md"
+          git diff --no-ext-diff --unified=2 \
+            --ignore-matching-lines='^[|] Audit date [|]' \
+            -- LINK-AUDIT.md > "$diff_file"
+
+          python - "$issue_body" LINK-AUDIT.md "$diff_file" "$RUNNER_TEMP/inventory.txt" "$RUNNER_TEMP/link-audit.log" <<'PY'
+          import os
+          import pathlib
+          import sys
+
+          body_path, report_path, diff_path, inventory_path, log_path = map(pathlib.Path, sys.argv[1:])
+          report = report_path.read_text(encoding="utf-8")
+          diff = diff_path.read_text(encoding="utf-8")
+          inventory = inventory_path.read_text(encoding="utf-8")
+          log = log_path.read_text(encoding="utf-8", errors="replace")
+
+          def section(title):
+              marker = "## " + title
+              start = report.index(marker)
+              end = report.find("\n## ", start + len(marker))
+              return report[start:end if end != -1 else None]
+
+          exit_code = os.environ["AUDIT_EXIT_CODE"]
+          changed = os.environ["REPORT_CHANGED"]
+          run_url = "%s/%s/actions/runs/%s" % (
+              os.environ["GITHUB_SERVER_URL"],
+              os.environ["GITHUB_REPOSITORY"],
+              os.environ["GITHUB_RUN_ID"],
+          )
+          if exit_code == "0":
+              outcome = "The strict audit passed, but the regenerated report changed substantively."
+          else:
+              outcome = "The strict audit failed. The diagnostics below identify the disagreements or unresolved destinations."
+
+          diagnostics = "\n\n".join(section(title) for title in (
+              "Summary",
+              "Title Disagreements",
+              "Identifier Disagreements",
+              "Destinations That Did Not Return 200",
+          ))
+          shown_diff = diff[:12000]
+          if len(diff) > len(shown_diff):
+              shown_diff += "\n... diff truncated; use the workflow run for the complete generated report.\n"
+          shown_report = report[:32000]
+          if len(report) > len(shown_report):
+              shown_report += "\n... report truncated; use the workflow run for the complete file.\n"
+          shown_log = log[-8000:]
+          if len(log) > len(shown_log):
+              shown_log = "... earlier command output omitted.\n" + shown_log
+
+          body = """{outcome}
+
+          - Workflow run: {run_url}
+          - Trigger: `{trigger}`
+          - Strict audit exit code: `{exit_code}`
+          - Substantive `LINK-AUDIT.md` change: `{changed}` (the audit date alone is ignored)
+
+          ## Current README inventory
+
+          ```text
+          {inventory}```
+
+          ## Audit diagnostics
+
+          {diagnostics}
+
+          ## Audit command output
+
+          ```text
+          {shown_log}```
+
+          ## Substantive report diff
+
+          ```diff
+          {shown_diff}```
+
+          <details>
+          <summary>Complete regenerated report, subject to the size note below</summary>
+
+          {shown_report}
+          </details>
+          """.format(
+              outcome=outcome,
+              run_url=run_url,
+              trigger=os.environ["GITHUB_EVENT_NAME"],
+              exit_code=exit_code,
+              changed=changed,
+              inventory=inventory,
+              diagnostics=diagnostics,
+              shown_log=shown_log,
+              shown_diff=shown_diff,
+              shown_report=shown_report,
+          )
+          body_path.write_text(body, encoding="utf-8", newline="\n")
+          PY
+
+          title="Weekly link audit needs attention"
+          issue_numbers="$(gh issue list --state open --limit 100 --json number,title \
+            --jq '.[] | select(.title == "Weekly link audit needs attention") | .number')"
+          issue_number="${issue_numbers%%$'\n'*}"
+          if [[ -n "$issue_number" ]]; then
+            gh issue edit "$issue_number" --title "$title" --body-file "$issue_body"
+          else
+            gh issue create --title "$title" --body-file "$issue_body"
+          fi
+
+      - name: Fail when the strict audit failed
+        if: steps.audit.outputs.exit_code != '0'
+        shell: bash
+        run: exit "${{ steps.audit.outputs.exit_code }}"

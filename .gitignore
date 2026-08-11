@@ -17,3 +17,6 @@ REFERENCE-CHECK.md
 # Agent review artifacts (local only)
 Review-*.md
 PLAN-*.md
+
+# Local run of the link audit (the committed report is LINK-AUDIT.md)
+link-audit-local.md

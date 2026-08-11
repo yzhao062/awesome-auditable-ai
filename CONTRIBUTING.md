@@ -10,9 +10,9 @@ Open an issue with the "Suggest a Resource" template, or send a pull request tha
 
 ## Scope and Inclusion Bar
 
-Reliability is the umbrella for this list. Auditing is one strand within reliability, alongside consistency, robustness, fault tolerance, recovery, monitoring, failure diagnosis, security review, and evaluation.
+Auditability is the goal for this list: establishing what an agent did, what it relied on, why it acted, and whether the action was right. Reliability engineering is how a system gets there, which is why consistency, robustness, fault tolerance, recovery, monitoring, failure diagnosis, security review, and evaluation are all in scope alongside decision records and post-hoc review.
 
-An entry must be directly useful for building, evaluating, monitoring, securing, diagnosing, or auditing reliable AI agents. Generic LLM benchmarking with no agent angle, generic MLOps, and agent frameworks that are not themselves reliability assets are out of scope.
+An entry must be directly useful for auditing an AI agent, or for the building, evaluating, monitoring, securing, or diagnosing work that makes an agent auditable. Generic LLM benchmarking with no agent angle, generic MLOps, and agent frameworks that are not themselves reliability or auditing assets are out of scope.
 
 A tool entry must link to an inspectable public source repository. A closed-source managed service is listed only when it is used widely enough that omitting it would give a reader a false picture of the field, and it is then marked `[Managed]` and its closed-source status stated in the entry. LangSmith is the current example. A newly launched product is not that case, so a managed service without public source and without established adoption is out of scope. A paper entry must link to an arXiv record or a published venue. Self-deposited preprints with no confirmed venue and no evaluation are out of scope. Standards and frameworks must link to the official specification or issuing organization.
 
@@ -31,11 +31,14 @@ The example is copied from the current README. Use one row per occurrence and on
 Use these Venue forms:
 
 - Main conference or journal: `<acronym or established journal short title> <year>`, such as `ICML 2025` or `Sci. China Inf. Sci. 2025`.
-- ACL Findings: `ACL Findings <year>`.
-- Position paper: `<host> <year> Position Paper`.
-- Datasets and Benchmarks Track: `<host> <year> Datasets and Benchmarks Track`.
-- Workshop: `<host> <year> Workshop (<short workshop name>)`.
+- Findings: `<host> Findings <year>`, such as `ACL Findings 2025` or `EMNLP Findings 2024`.
+- Position paper: `<host> <year> Position Paper` or `<host> <year> Position Paper Track`, matching how the venue names it.
+- Datasets and Benchmarks Track: `<host> <year> Datasets and Benchmarks Track`, optionally followed by a decision qualifier the venue itself assigns, such as `(Spotlight)`.
+- Workshop: `<host> <year> Workshop (<short workshop name>)`. When the workshop is well known by its own name and its host is not established from the record, `<workshop name> <year> Workshop` is acceptable.
+- Other archival venue: `<venue name> <year>`, for a venue that is none of the above, such as a summit with published proceedings.
 - Preprint: `Preprint <first arXiv year>`, only when no venue is confirmed.
+
+The venue field records what the venue is, not how strong it is. Do not upgrade a non-archival workshop to its host conference, and do not drop the workshop qualifier to make an entry look like a main-conference paper.
 
 Use only these labels in the `Links` column:
 
@@ -75,6 +78,17 @@ Five papers intentionally appear once in a topical section and once in `Datasets
 - Verify that every submitted link works and matches its label.
 - Use no promotional language. A maintainer may edit a summary for tone and length.
 - Keep one primary occurrence per resource unless the cross-listing rule above applies.
+
+## Automated Verification
+
+Pull requests that change `README.md` or `tools/**` recompute the inventory in the GitHub Actions job summary and check every link, arXiv identifier, and arXiv title. The link check retries transient responses twice. An arXiv disagreement, a non-retryable HTTP 4xx response, or a non-network error fails the pull request; exhausted timeouts, connection failures, 408, 425, 429, 5xx, and other HTTP statuses are reported as warnings and checked again by the strict weekly audit. The job summary works for pull requests from forks because it does not require permission to write to this repository.
+
+Use Python 3.12 to run the same pull-request checks locally before opening a pull request. They require only the standard library:
+
+```console
+python tools/inventory.py README.md
+python tools/check_links.py README.md --out link-audit-local.md --delay 0.10 --timeout 15 --retries 2 --retry-backoff 1 --failure-policy pull-request
+```
 
 ## License
 
