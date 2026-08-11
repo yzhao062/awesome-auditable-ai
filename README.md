@@ -322,6 +322,16 @@ Standards and governance instruments for agent reliability and accountability. P
 
 **[Standard] C2PA Technical Specification / Content Credentials** ([spec.c2pa.org](https://spec.c2pa.org/specifications/specifications/2.2/specs/_attachments/C2PA_Specification.pdf), [c2pa-rs](https://github.com/contentauth/c2pa-rs)): cryptographically signed, tamper-evident metadata standard that records the origin and edit history of media, including a manifest for AI-generated and AI-edited content. C2PA (Adobe, Microsoft, BBC, Intel, Truepic, Sony, and others), v2.2 (2025).
 
+**[Standard] Certificate Transparency (RFC 6962, RFC 9162)** ([RFC 6962](https://www.rfc-editor.org/rfc/rfc6962), [RFC 9162](https://www.rfc-editor.org/rfc/rfc9162)): append-only Merkle tree log with inclusion proofs, showing an entry is in the log, and consistency proofs, showing the log was only appended to; the origin of the verifiable-log pattern that tamper-evident agent trails reuse. IETF, 2013 (v1) / 2021 (v2).
+
+**[Standard] in-toto Attestation Framework** ([in-toto/attestation](https://github.com/in-toto/attestation), [in-toto.io](https://in-toto.io/)): signed, machine-readable statements binding a subject artifact to a predicate describing what was done to it, giving a common envelope for provenance claims across steps and tools. in-toto / CNCF, 2018-2026 (living spec).
+
+**[Standard] SLSA (Supply-chain Levels for Software Artifacts)** ([slsa.dev](https://slsa.dev/spec/v1.0/)): graded framework defining what provenance a build must produce and how tamper-resistant it must be, with each level naming concrete requirements rather than intent. OpenSSF, v1.0 (2023).
+
+**[Standard] DSSE (Dead Simple Signing Envelope)** ([secure-systems-lab/dsse](https://github.com/secure-systems-lab/dsse)): signing envelope that authenticates a payload together with its type, removing the canonicalization ambiguity that lets a signature be replayed against a different interpretation of the same bytes; used by in-toto and Sigstore. Secure Systems Lab, 2021-2026.
+
+**[Tool] Rekor** ([sigstore/rekor](https://github.com/sigstore/rekor)): transparency log service for signed software artifacts and attestations, built on an append-only Merkle log and serving inclusion and consistency proofs over a public API. Sigstore / OpenSSF, Apache-2.0.
+
 ---
 
 ## Related Projects
