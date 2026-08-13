@@ -18,29 +18,10 @@ DEFAULT_TITLE = (
 STANDALONE_AWESOME_BADGE = (
     "[![Awesome](https://awesome.re/badge-flat2.svg)](https://awesome.re)"
 )
-CONTENTS = """## Contents
-
-- [The Reliability Map](#the-reliability-map)
-- [Surveys and Foundations](#surveys-and-foundations)
-- [Failure Attribution and Diagnosis](#failure-attribution-and-diagnosis)
-- [Reliability and Robustness](#reliability-and-robustness)
-- [Runtime Monitoring and Guardrails](#runtime-monitoring-and-guardrails)
-- [Audit Trails and Decision Records](#audit-trails-and-decision-records)
-- [Security Auditing and Scanners](#security-auditing-and-scanners)
-- [Datasets and Benchmarks](#datasets-and-benchmarks)
-- [Tools and Platforms](#tools-and-platforms)
-- [Standards and Governance](#standards-and-governance)
-- [Related Projects](#related-projects)
-- [Maintained By](#maintained-by)
-- [Citation](#citation)"""
-
-CONTENTS_BLOCK_RE = re.compile(
-    r"<details>\n"
-    r"<summary><b>Table of Contents</b></summary>\n"
-    r".*?"
-    r"</details>",
-    re.DOTALL,
-)
+# A hard-coded copy of the document's own structure goes stale the moment the document
+# changes, and then rewrites it back to the stale version. That is how an earlier constant
+# here reinstated a second H1. The table of contents and the maintainer's own section are
+# therefore left to the README rather than regenerated from a literal stored in this file.
 H2_RE = re.compile(r"^##\s+(.+?)\s*$")
 PRIMARY_LINK_RE = re.compile(r"\[([^]\n]+)\]\(([^)\n]+)\)")
 DOUBLE_BRACKET_LINK_RE = re.compile(
@@ -233,12 +214,6 @@ def add_title_and_fix_badges(lines: list[str]) -> list[str]:
     return [title, "", *cleaned]
 
 
-def replace_contents(text: str) -> str:
-    if CONTENTS_BLOCK_RE.search(text):
-        return CONTENTS_BLOCK_RE.sub(CONTENTS, text, count=1)
-    return text
-
-
 def add_reliability_list_ignores(lines: list[str]) -> list[str]:
     result = list(lines)
     for summary_start in IGNORED_RELIABILITY_LISTS:
@@ -262,38 +237,6 @@ def add_reliability_list_ignores(lines: list[str]) -> list[str]:
             continue
         result.insert(list_index, "<!--lint ignore awesome-list-item-->")
     return result
-
-
-def format_related_projects(text: str) -> str:
-    start = text.find("## Related Projects\n")
-    if start == -1:
-        return text
-    end = text.find("\n---", start)
-    if end == -1:
-        end = len(text)
-    section = text[start:end]
-
-    def linked_project(match: re.Match[str]) -> str:
-        description = match.group(3)
-        description = description[:1].upper() + description[1:]
-        return f"- [{match.group(1)}]({match.group(2)}) - {description}"
-
-    section = re.sub(
-        r"(?m)^- \*\*\[([^]\n]+)\]\(([^)\n]+)\)\*\*:\s*(.+)$",
-        linked_project,
-        section,
-    )
-    section = re.sub(
-        r"(?m)^(- \[[^]\n]+\]\([^)\n]+\) - )([a-z])",
-        lambda match: match.group(1) + match.group(2).upper(),
-        section,
-    )
-    section = re.sub(
-        r"(?m)^- \*\*([^*\n]+)\*\*([^:\n]*):\s*(.+)$",
-        r"\1\2: \3",
-        section,
-    )
-    return text[:start] + section + text[end:]
 
 
 def remove_artifact_link(cell: str, artifact: str) -> str:
@@ -385,8 +328,6 @@ def escape_undefined_references(text: str) -> str:
 def transform(text: str) -> str:
     lines = add_title_and_fix_badges(text.split("\n"))
     text = "\n".join(lines)
-    text = replace_contents(text)
-    text = format_related_projects(text)
     lines = add_reliability_list_ignores(text.split("\n"))
     lines = retarget_cross_listings(lines)
     text = escape_undefined_references("\n".join(lines))

@@ -5,7 +5,7 @@ and copy the numbers across, or run it to confirm that a claim still holds.
 
 Counting rules, stated so the numbers mean something specific:
 
-- An **entry** is one line between the first content section and `## Related Projects` that
+- An **entry** is one line between the first content section and `## Contributing` that
   begins a resource: a table row starting ``| [`` or a bold standalone entry starting ``**\\[``.
   A paper that is deliberately cross-listed in two sections counts once per occurrence, which
   is why the entry total exceeds the number of distinct resources.
@@ -23,8 +23,11 @@ Counting rules, stated so the numbers mean something specific:
   repository is included. Having a repository is also not the same as having an open-source
   license, so licences are read from the entry text rather than assumed.
 
-The counted window runs from the first content section to ``## Related Projects``, so the
-maintainer's own projects and the Reliability Map taxonomy rows are excluded by construction.
+The counted window runs from the first content section to ``## Contributing``, so the
+Reliability Map taxonomy rows and `## The Auditable Agents Ecosystem`, which both sit above the
+first content section, are excluded by construction. Both boundary headings must exist in the
+README; ``test_inventory_window_boundaries_exist`` fails if either is renamed or removed, because
+a boundary that no longer matches would silently widen the window instead of erroring.
 
 Usage:
     python tools/inventory.py [README.md]
@@ -45,7 +48,7 @@ ARXIV_RE = re.compile(r"arxiv\.org/abs/(\d{4}\.\d{4,5})")
 GITHUB_RE = re.compile(r"github\.com/([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)")
 BOLD_KIND_RE = re.compile(r"^\*\*\\\[([^\]]+?)\\\]")
 START_SECTION = "Surveys and Foundations"
-STOP_SECTION = "Related Projects"
+STOP_SECTION = "Contributing"
 
 
 def analyze(path):

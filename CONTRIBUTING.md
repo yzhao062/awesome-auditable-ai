@@ -6,7 +6,7 @@ Thanks for helping keep this list useful. New resources, corrections, and broken
 
 Open an issue with the "Suggest a Resource" template, or send a pull request that edits `README.md` directly. For a pull request, add the entry to the most relevant section and use the formats below exactly. A suggestion must provide a title, primary link, target section, and one-sentence factual summary. Paper and dataset suggestions must also provide the venue and year. Tool suggestions must provide the license and activity period.
 
-`Related Projects` is maintainer-curated and is not open to resource suggestions. Use an issue for a resource that belongs in one of the contributor-facing sections instead.
+`The Auditable Agents Ecosystem` is maintainer-curated and is not open to resource suggestions. It presents one named ecosystem without ranking resources, and every component it names is also listed in the topical section it belongs to under the ordinary inclusion bar. Suggest such a component for its topical section instead, where it is judged on the same terms as everything else.
 
 ## Scope and Inclusion Bar
 
