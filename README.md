@@ -440,7 +440,7 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 **\[Python\] Giskard** ([Giskard-AI/giskard-oss](https://github.com/Giskard-AI/giskard-oss)): generates adversarial test suites from a plain-language description of the agent across OWASP LLM Top-10 threat categories, with multi-turn agent testing in v3. Apache-2.0, 2022-present.
 
-**\[Python\] A2E** ([datamllab/A2E](https://github.com/datamllab/A2E)): end-to-end evaluation engine for agent harnesses that uses the Agent Task Protocol to integrate tasks with different harnesses, automatically captures standardized execution traces, and assesses execution efficiency, tool use, task planning, and error recovery with multidimensional metrics. MIT-licensed, 2026-present. [\[Paper\]](https://arxiv.org/abs/2608.07346) (Preprint 2026)
+**\[Python\] A2E** ([datamllab/A2E](https://github.com/datamllab/A2E)): end-to-end agent auditing engine that uses the Agent Task Protocol to integrate tasks with different harnesses, automatically captures standardized execution traces, and assesses execution efficiency, tool use, task planning, and error recovery with multidimensional metrics. MIT-licensed, 2026-present. [\[Paper\]](https://arxiv.org/abs/2608.07346) (Preprint 2026)
 
 ---
 
