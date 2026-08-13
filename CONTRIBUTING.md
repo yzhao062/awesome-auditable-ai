@@ -81,7 +81,7 @@ Five papers intentionally appear once in a topical section and once in `Datasets
 
 ## Automated Verification
 
-Pull requests that change `README.md` or `tools/**` recompute the inventory in the GitHub Actions job summary and check every link, arXiv identifier, and arXiv title. The link check retries transient responses twice. An arXiv disagreement, a non-retryable HTTP 4xx response, or a non-network error fails the pull request; exhausted timeouts, connection failures, 408, 425, 429, 5xx, and other HTTP statuses are reported as warnings and checked again by the strict weekly audit. The job summary works for pull requests from forks because it does not require permission to write to this repository.
+Pull requests that change `README.md` or `tools/**` recompute the inventory in the GitHub Actions job summary and check every cited link, arXiv identifier, and arXiv title. This repository's own status badges and the GitHub pages behind them are skipped and listed in the report under `Repository Chrome Not Audited`, so that a rate limit on our own pages cannot fail an audit of everyone else's links, and so that the badge reporting the audit cannot decide its result. The link check retries transient responses twice. An arXiv disagreement, a non-retryable HTTP 4xx response, or a non-network error fails the pull request; exhausted timeouts, connection failures, 408, 425, 429, 5xx, and other HTTP statuses are reported as warnings and checked again by the strict weekly audit. The job summary works for pull requests from forks because it does not require permission to write to this repository.
 
 Use Python 3.12 to run the same pull-request checks locally before opening a pull request. They require only the standard library:
 

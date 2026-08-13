@@ -13,6 +13,7 @@ import builtins
 import importlib.util
 import io
 import pathlib
+import subprocess
 import sys
 import unittest
 from unittest.mock import patch
@@ -148,6 +149,55 @@ class ReachabilityPolicy(unittest.TestCase):
     def test_known_wall_does_not_mask_an_outage(self):
         """A timeout at an excused URL is an outage, not the documented bot wall."""
         self.assertEqual(run_audit([(self.WALL, None, "link")], [("TimeoutError", "")])[0], 1)
+
+    def test_self_chrome_is_skipped_rather_than_fetched(self):
+        """A rate limit on this repository's own pages must not fail an audit of other work."""
+        chrome = "https://github.com/%s/actions/workflows/verify.yml" % check_links.SELF_REPO
+        code, report = run_audit([(chrome, None, "link")], [(429, "")])
+        self.assertEqual(code, 0)
+        self.assertIn("Repository Chrome Not Audited", report)
+        self.assertIn(chrome, report)
+
+    def test_self_chrome_covers_the_badge_image_and_its_link(self):
+        for path in ("actions/workflows/verify.yml",
+                     "actions/workflows/verify.yml/badge.svg",
+                     "commits/main"):
+            with self.subTest(path=path):
+                url = "https://github.com/%s/%s" % (check_links.SELF_REPO, path)
+                self.assertTrue(check_links.is_self_chrome(url))
+
+    def test_content_and_other_repositories_stay_in_the_audit(self):
+        """The exclusion must not quietly stop checking real cited resources."""
+        for url in (
+            "https://github.com/yzhao062/auditable",
+            "https://github.com/yzhao062/grade",
+            "https://github.com/%s" % check_links.SELF_REPO,
+            "https://github.com/%s/blob/main/CONTRIBUTING.md" % check_links.SELF_REPO,
+            "https://github.com/someone-else/awesome-auditable-ai/actions",
+        ):
+            with self.subTest(url=url):
+                self.assertFalse(check_links.is_self_chrome(url))
+
+    def test_self_repo_still_matches_the_git_remote(self):
+        """SELF_REPO is a literal, and a literal that stops matching excludes nothing while
+        looking like it still does. A rename must fail here rather than in production."""
+        try:
+            remote = subprocess.run(
+                ["git", "-C", str(pathlib.Path(__file__).resolve().parent.parent),
+                 "remote", "get-url", "origin"],
+                capture_output=True, text=True, timeout=15,
+            )
+        except (OSError, subprocess.SubprocessError):
+            self.skipTest("git is unavailable")
+        if remote.returncode != 0:
+            self.skipTest("no origin remote configured")
+        url = remote.stdout.strip().removesuffix(".git")
+        self.assertTrue(
+            url.endswith(check_links.SELF_REPO),
+            "SELF_REPO is %r but origin is %r. The chrome exclusion matches on this literal, "
+            "so a stale value silently audits pages it was written to skip."
+            % (check_links.SELF_REPO, url),
+        )
 
     def test_every_excused_destination_is_still_in_the_readme(self):
         """An exemption for a link that has been removed stops excusing anything and starts

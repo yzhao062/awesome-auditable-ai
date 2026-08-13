@@ -79,6 +79,30 @@ KNOWN_BOT_WALLS = {
         "a browser.",
 }
 
+# This audit exists to check the resources the list cites. A few destinations in the README
+# are not cited resources: they are the repository's own furniture, the status badges and the
+# GitHub pages behind them. Auditing those is a category error, and it cost twice. GitHub
+# answers 429 to its own dynamic pages when the caller is a shared CI address, which failed an
+# audit of 253 other people's links on one rate limit. Worse, a badge that links to the audit
+# can then decide the audit's own result, so the signal reporting link health becomes a reason
+# for it to fail. Chrome is named in the report instead of fetched.
+#
+# The match is deliberately narrow. It covers this repository's UI sections only, so other
+# repositories owned by the same person stay in the audit like any other cited resource, and so
+# do this repository's own content paths.
+SELF_REPO = "yzhao062/awesome-auditable-ai"
+SELF_CHROME_SECTIONS = ("actions", "commits", "releases", "graphs", "pulse", "network")
+
+
+def is_self_chrome(url):
+    """True when a destination is this repository's presentation rather than a cited resource."""
+    prefix = "https://github.com/%s/" % SELF_REPO
+    if not url.startswith(prefix):
+        return False
+    section = url[len(prefix):].split("/", 1)[0]
+    section = section.split("?", 1)[0].split("#", 1)[0]
+    return section in SELF_CHROME_SECTIONS
+
 # Modern identifiers (2612.34567) and legacy category identifiers (hep-th/9901001) are both
 # real arXiv references, so both must enter verification rather than being skipped silently.
 ARXIV_ABS_RE = re.compile(r"arxiv\.org/abs/(\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?/\d{7})")
@@ -404,6 +428,9 @@ def main():
         labels_by_url.setdefault(url, [])
         if label is not None:
             labels_by_url[url].append(label)
+    skipped_chrome = sorted(url for url in labels_by_url if is_self_chrome(url))
+    for url in skipped_chrome:
+        del labels_by_url[url]
     urls = sorted(labels_by_url)
 
     rows = []                 # (url, status, id_result, title_result, detail)
@@ -510,6 +537,7 @@ def main():
         "| arXiv identifiers with no meta tag | %d |" % id_absent,
         "| arXiv identifier disagreements | %d |" % len(id_mismatches),
         "| arXiv pages where a check could not run (unverified) | %d |" % len({u for u, _ in title_unverified}),
+        "| Repository chrome skipped, listed below | %d |" % len(skipped_chrome),
         "",
         "## What This Checks, and What It Does Not",
         "",
@@ -519,7 +547,9 @@ def main():
         "entry pointing at a real but different paper.",
         "",
         "Not checked: whether a summary sentence fairly describes the linked work, whether a venue",
-        "field is correct, or whether a non-arXiv destination contains the claimed content.",
+        "field is correct, or whether a non-arXiv destination contains the claimed content. This",
+        "repository's own badges and the GitHub pages behind them are also not checked, and each",
+        "one is named under Repository Chrome Not Audited rather than counted as passing.",
         "",
         "Titles count as agreeing only when they are identical after case folding and punctuation",
         "removal, so a near-identical title is never silently accepted. A remaining difference of",
@@ -572,6 +602,23 @@ def main():
             "| %s | %s | %s |" % (s, u, KNOWN_BOT_WALLS.get((u, s), "not a recorded exception"))
             for u, s, _, _, _ in unresolved
         ] + [""]
+    else:
+        lines += ["None.", ""]
+
+    lines += ["## Repository Chrome Not Audited", ""]
+    if skipped_chrome:
+        lines += [
+            "These destinations are this repository's own badges and the GitHub pages behind them,",
+            "rather than resources this list cites. They are skipped for two reasons. GitHub rate-",
+            "limits its own dynamic pages for shared CI addresses, and one such limit should not",
+            "fail an audit of everyone else's links. A badge that points at this audit would also",
+            "be able to decide the audit's result, which is a loop worth refusing. Every other",
+            "github.com destination is audited, including this owner's other repositories.",
+            "",
+            "| URL |",
+            "|---|",
+        ]
+        lines += ["| %s |" % u for u in skipped_chrome] + [""]
     else:
         lines += ["None.", ""]
 

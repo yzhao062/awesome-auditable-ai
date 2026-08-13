@@ -6,9 +6,10 @@
 
 <img src="assets/banner.png" alt="Awesome Auditable AI: a curated list for auditing AI agents" width="100%">
 
+[![Verify README](https://github.com/yzhao062/awesome-auditable-ai/actions/workflows/verify.yml/badge.svg)](https://github.com/yzhao062/awesome-auditable-ai/actions/workflows/verify.yml)
 [![License: CC0-1.0](https://img.shields.io/badge/license-CC0--1.0-blue.svg)](https://creativecommons.org/publicdomain/zero/1.0/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg)](CONTRIBUTING.md)
-![Last commit](https://img.shields.io/github/last-commit/yzhao062/awesome-auditable-ai)
+[![Last commit](https://img.shields.io/github/last-commit/yzhao062/awesome-auditable-ai)](https://github.com/yzhao062/awesome-auditable-ai/commits/main)
 
 
 </div>
@@ -22,7 +23,7 @@
 
 This list maps the work on that problem: **183 entries across nine sections**, covering 129 unique arXiv papers, 84 GitHub repositories, 16 standards, and one framework. Five papers are deliberately cross-listed, appearing once in a topical section and once as a dataset.
 
-Two properties make the list checkable. Every paper row carries a venue field, so of the 132 table rows, 68 name a publication venue and 64 are marked Preprint; a reader can see the evidence level of a row without opening it. Naming a venue is not the same as peer review, and the field records what the venue is rather than grading it: a non-archival workshop and a main-conference track both appear as what they are. And the citation check goes past asking whether a link responds: each arXiv entry's title is compared with the title the arXiv page itself reports, and only an exact match counts. A near-identical title is not treated as agreement, because that is precisely what a link to the wrong paper in a series looks like; "Part I" against "Part II" scores 0.995 on similarity. The 2026-08-12 run compared 127 entry titles, covering 125 distinct papers, and 129 identifiers across 253 destinations, and found no disagreements, and it names every destination that refuses automated clients rather than quietly counting it as passing.
+Two properties make the list checkable. Every paper row carries a venue field, so of the 132 table rows, 68 name a publication venue and 64 are marked Preprint; a reader can see the evidence level of a row without opening it. Naming a venue is not the same as peer review, and the field records what the venue is rather than grading it: a non-archival workshop and a main-conference track both appear as what they are. And the citation check goes past asking whether a link responds: each arXiv entry's title is compared with the title the arXiv page itself reports, and only an exact match counts. A near-identical title is not treated as agreement, because that is precisely what a link to the wrong paper in a series looks like; "Part I" against "Part II" scores 0.995 on similarity. The 2026-08-12 run compared 127 entry titles, covering 125 distinct papers, and 129 identifiers across 253 destinations, and found no disagreements, and it names every destination that refuses automated clients rather than quietly counting it as passing. The three destinations it does not audit are this repository's own badges and the pages behind them, and the report names those too.
 
 Regenerate the report with [`tools/check_links.py`](tools/check_links.py), recount the list with [`tools/inventory.py`](tools/inventory.py), and read the result in [`LINK-AUDIT.md`](LINK-AUDIT.md). The ways this audit could report a false pass are kept as tests in [`tools/test_check_links.py`](tools/test_check_links.py), which runs on every pull request along with the audit itself.
 
