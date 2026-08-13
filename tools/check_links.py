@@ -73,6 +73,10 @@ KNOWN_BOT_WALLS = {
         "EUR-Lex answers non-browser clients with an empty 202 from its JavaScript gateway; the "
         "cited act (Digital Omnibus on AI, in force 27 July 2026) was confirmed against the "
         "European Commission announcement and independent legal summaries.",
+    ("https://scholar.google.com/citations?user=zoGDYsoAAAAJ&hl=en", 403):
+        "Google Scholar serves 403 to datacenter clients, so this destination resolves from a "
+        "workstation and fails from a GitHub-hosted runner; the profile was verified by hand in "
+        "a browser.",
 }
 
 # Modern identifiers (2612.34567) and legacy category identifiers (hep-th/9901001) are both

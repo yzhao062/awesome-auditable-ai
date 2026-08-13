@@ -149,6 +149,21 @@ class ReachabilityPolicy(unittest.TestCase):
         """A timeout at an excused URL is an outage, not the documented bot wall."""
         self.assertEqual(run_audit([(self.WALL, None, "link")], [("TimeoutError", "")])[0], 1)
 
+    def test_every_excused_destination_is_still_in_the_readme(self):
+        """An exemption for a link that has been removed stops excusing anything and starts
+        hiding the fact that the list no longer cites the source it was written for."""
+        readme = pathlib.Path(__file__).resolve().parent.parent / "README.md"
+        text = readme.read_text(encoding="utf-8")
+        for url, status in check_links.KNOWN_BOT_WALLS:
+            with self.subTest(url=url):
+                self.assertIn(
+                    url,
+                    text,
+                    "KNOWN_BOT_WALLS excuses %s (status %d), which README.md no longer links. "
+                    "Remove the exemption, or restore the link it was written for."
+                    % (url, status),
+                )
+
     def test_unresolvable_hostname_blocks_a_pull_request(self):
         """A mistyped hostname is the most common broken link in a contribution."""
         code, _ = run_audit(
