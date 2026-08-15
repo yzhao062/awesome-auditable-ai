@@ -29,8 +29,13 @@ DOUBLE_BRACKET_LINK_RE = re.compile(
 )
 DELIMITER_CELL_RE = re.compile(r":?-{3,}:?")
 
+# Each artifact URL here overwrites whatever the README currently has, so a stale entry does
+# not merely go unused: it reverts a hand-made correction on the next run and leaves the file
+# looking freshly formatted. That is how the dead patronus-ai/trail-benchmark link came back
+# after the audit had already flagged it. test_cross_listed_artifacts_are_live keeps every URL
+# in this tuple present in the README.
 CROSS_LISTED_ARTIFACTS = (
-    ("TRAIL: Trace Reasoning", "https://github.com/patronus-ai/trail-benchmark"),
+    ("TRAIL: Trace Reasoning", "https://huggingface.co/datasets/PatronusAI/TRAIL"),
     (
         "Which Agent Causes Task Failures and When?",
         "https://github.com/ag2ai/Agents_Failure_Attribution",

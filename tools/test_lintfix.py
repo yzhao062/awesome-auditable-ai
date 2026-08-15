@@ -85,6 +85,24 @@ class Stability(unittest.TestCase):
         text = readme.read_text(encoding="utf-8").replace("\r\n", "\n").replace("\r", "\n")
         self.assertEqual(lintfix.transform(text), text)
 
+    def test_cross_listed_artifacts_are_live(self):
+        """These URLs overwrite whatever the README has, so a stale one reverts a correction
+        instead of failing. A dead link fixed by hand came back this way on the next run."""
+        readme = pathlib.Path(__file__).resolve().parent.parent / "README.md"
+        if not readme.exists():
+            self.skipTest("README.md not present")
+        text = readme.read_text(encoding="utf-8")
+        for fragment, artifact in lintfix.CROSS_LISTED_ARTIFACTS:
+            with self.subTest(fragment=fragment):
+                self.assertIn(
+                    artifact,
+                    text,
+                    "CROSS_LISTED_ARTIFACTS retargets %r to %s, which README.md does not "
+                    "contain. lintfix would rewrite the row to that URL on its next run, so "
+                    "update this tuple whenever the artifact moves."
+                    % (fragment, artifact),
+                )
+
 
 if __name__ == "__main__":
     unittest.main()
