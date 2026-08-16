@@ -456,6 +456,8 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 **\[Python\] AgentRunProof** ([FU-max-boop/agentrunproof](https://github.com/FU-max-boop/agentrunproof)): deterministic runtime-conformance harness for the OpenAI Agents SDK that drives the real `Runner` through scripted responses on the public `Model` interface, and writes content-addressed evidence that can be rechecked without rerunning the SDK; built-in scenarios make no model API calls. MIT-licensed, 2026-present.
 
+**\[Python\] A2E** ([datamllab/A2E](https://github.com/datamllab/A2E)): end-to-end agent auditing engine that uses the Agent Task Protocol to integrate tasks with different harnesses, automatically captures standardized execution traces, and assesses execution efficiency, tool use, task planning, and error recovery with multidimensional metrics. MIT-licensed, 2026-present. [\[Paper\]](https://arxiv.org/abs/2608.07346) (Preprint 2026)
+
 ---
 
 ## Standards and Governance
