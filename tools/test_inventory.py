@@ -90,6 +90,47 @@ class ReadmeClaims(unittest.TestCase):
         )
         self.assertEqual(9, len(data["sections"]))
 
+    def test_every_hero_number_is_reproducible(self):
+        """The whole hero sentence is a set of claims, and each one drifts independently.
+
+        Editing a single link can move a count nobody thought to recheck: replacing a dead
+        GitHub link with a Hugging Face one dropped the unique-repository total by one while
+        the entry total stayed put, and the stale figure shipped.
+        """
+        data = inventory.analyze(str(README))
+        text = README.read_text(encoding="utf-8")
+        claims = {
+            "unique arXiv papers": data["arxiv_unique"],
+            "GitHub repositories": data["repos_unique"],
+        }
+        for label, computed in claims.items():
+            with self.subTest(claim=label):
+                self.assertIn(
+                    "%d %s" % (computed, label),
+                    text,
+                    "README.md does not state '%d %s'. inventory.py computes %d, so the hero "
+                    "sentence is stating a number this repository cannot reproduce."
+                    % (computed, label, computed),
+                )
+
+    def test_social_card_matches_the_inventory(self):
+        """The card is the first thing a link preview shows, and nothing else checks it."""
+        card = README.parent / "assets" / "social-card.html"
+        if not card.exists():
+            self.skipTest("social card not present")
+        data = inventory.analyze(str(README))
+        markup = card.read_text(encoding="utf-8")
+        for value, label in ((data["entries"], "Entries"),
+                             (data["arxiv_unique"], "arXiv papers"),
+                             (data["repos_unique"], "Repos")):
+            with self.subTest(label=label):
+                self.assertIn(
+                    '<div class="n">%d</div><div class="l">%s</div>' % (value, label),
+                    markup,
+                    "assets/social-card.html does not show %d for %s. Update the card and "
+                    "re-render the PNG with assets/render_social.py." % (value, label),
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

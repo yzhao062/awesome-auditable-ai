@@ -13,6 +13,7 @@ import builtins
 import importlib.util
 import io
 import pathlib
+import re
 import subprocess
 import sys
 import unittest
@@ -197,6 +198,28 @@ class ReachabilityPolicy(unittest.TestCase):
             "SELF_REPO is %r but origin is %r. The chrome exclusion matches on this literal, "
             "so a stale value silently audits pages it was written to skip."
             % (check_links.SELF_REPO, url),
+        )
+
+    def test_readme_states_the_destination_count_it_would_audit(self):
+        """The audited-destination total is a claim in the prose, and it moves whenever any
+        link is added anywhere. Two people editing different sections each computed it against
+        a base missing the other's link, and the stated figure was short by one."""
+        readme = pathlib.Path(__file__).resolve().parent.parent / "README.md"
+        text = readme.read_text(encoding="utf-8")
+        stated = re.search(r"across (\d+) destinations", text)
+        if stated is None:
+            self.skipTest("README states no destination count")
+        urls = {
+            u for u, _, _ in check_links.extract_links(str(readme))
+            if u.startswith(("http://", "https://"))
+        }
+        audited = {u for u in urls if not check_links.is_self_chrome(u)}
+        self.assertEqual(
+            len(audited),
+            int(stated.group(1)),
+            "README.md says it audits %s destinations; extracting the links finds %d. Any link "
+            "added or removed moves this, so recount instead of carrying the old number."
+            % (stated.group(1), len(audited)),
         )
 
     def test_every_excused_destination_is_still_in_the_readme(self):
