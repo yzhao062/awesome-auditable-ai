@@ -218,7 +218,7 @@ A reader-first map of where AI agent reliability is won and lost. Reliability is
 
 **[TypeScript, Python] AgentLens** ([agentkitai/agentlens](https://github.com/agentkitai/agentlens)): MCP-native observability and audit-trail platform that records LLM calls, tool invocations, and decisions in an append-only, SHA-256 hash-chained, verifiable event log.
 
-**[Python] Proofline** ([ceodaradigu/proofline-agent](https://github.com/ceodaradigu/proofline-agent)): verification-first agent that turns task contracts into deterministic SHA-256 proof packets, rejects missing, stale, or contradictory evidence, and gates external actions behind human approval.
+**[Python] Proofline** ([ceodaradigu/proofline-agent](https://github.com/ceodaradigu/proofline-agent)): verification-first agent that turns task contracts into deterministic SHA-256 proof packets, rejects missing, stale, or contradictory evidence, and gates external actions behind human approval. MIT-licensed, 2026-present.
 
 ---
 
