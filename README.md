@@ -24,7 +24,7 @@
 
 This list maps the work on that problem: **186 entries across nine sections**, covering 131 unique arXiv papers, 85 GitHub repositories, 16 standards, and one framework. Five papers are deliberately cross-listed, appearing once in a topical section and once as a dataset.
 
-Two properties make the list checkable. Every paper row carries a venue field, so of the 134 table rows, 69 name a publication venue and 65 are marked Preprint; a reader can see the evidence level of a row without opening it. Naming a venue is not the same as peer review, and the field records what the venue is rather than grading it: a non-archival workshop and a main-conference track both appear as what they are. And the citation check goes past asking whether a link responds: each arXiv entry's title is compared with the title the arXiv page itself reports, and only an exact match counts. A near-identical title is not treated as agreement, because that is precisely what a link to the wrong paper in a series looks like; "Part I" against "Part II" scores 0.995 on similarity. The 2026-08-16 run compared 129 entry titles and 131 identifiers across 258 destinations and found no disagreements. It names every destination that refuses automated clients rather than quietly counting it as passing. That run is also what caught a dataset repository going 404 three days after it last resolved. The three destinations it does not audit are this repository's own badges and the pages behind them, and the report names those too.
+Two properties make the list checkable. Every paper row carries a venue field, so of the 134 table rows, 69 name a publication venue and 65 are marked Preprint; a reader can see the evidence level of a row without opening it. Naming a venue is not the same as peer review, and the field records what the venue is rather than grading it: a non-archival workshop and a main-conference track both appear as what they are. And the citation check goes past asking whether a link responds: each arXiv entry's title is compared with the title the arXiv page itself reports, and only an exact match counts. A near-identical title is not treated as agreement, because that is precisely what a link to the wrong paper in a series looks like; "Part I" against "Part II" scores 0.995 on similarity. The 2026-08-16 run compared 129 entry titles and 131 identifiers across 259 destinations and found no disagreements. It names every destination that refuses automated clients rather than quietly counting it as passing. That run is also what caught a dataset repository going 404 three days after it last resolved. The three destinations it does not audit are this repository's own badges and the pages behind them, and the report names those too.
 
 Regenerate the report with [`tools/check_links.py`](tools/check_links.py), recount the list with [`tools/inventory.py`](tools/inventory.py), and read the result in [`LINK-AUDIT.md`](LINK-AUDIT.md). The ways this audit could report a false pass are kept as tests in [`tools/test_check_links.py`](tools/test_check_links.py), which runs on every pull request along with the audit itself.
 
@@ -43,6 +43,7 @@ Regenerate the report with [`tools/check_links.py`](tools/check_links.py), recou
 - [Datasets and Benchmarks](#datasets-and-benchmarks)
 - [Tools and Platforms](#tools-and-platforms)
 - [Standards and Governance](#standards-and-governance)
+- [Contributors](#contributors)
 - [Maintained By](#maintained-by)
 - [Citation](#citation)
 
@@ -519,6 +520,21 @@ several tools in this list build on.
 ## Contributing
 
 More items will be added to this repository. Please suggest other resources by opening an issue, submitting a pull request, or dropping me an email at yzhao010@usc.edu. New entries should be real, with a working link to the paper, repository, or specification.
+
+## Contributors
+
+People outside the lab have added entries to this list. Each of those went through a pull
+request, met the inclusion bar in `CONTRIBUTING.md`, and is checked by the same link and
+citation audit as everything else here.
+
+<a href="https://github.com/yzhao062/awesome-auditable-ai/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=yzhao062/awesome-auditable-ai" alt="Contributors to this list" />
+</a>
+
+The strip reads from the repository itself, so it stays current without anyone maintaining a
+list by hand.
+
+---
 
 ## Maintained By
 
