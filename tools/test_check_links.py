@@ -222,6 +222,31 @@ class ReachabilityPolicy(unittest.TestCase):
             % (stated.group(1), len(audited)),
         )
 
+    def test_readme_states_the_number_of_destinations_it_skips(self):
+        """This total is spelled as a word, so it never reads like a figure that needs
+        recomputing. Adding a contributor strip pointing at this repository's own graphs page
+        made it four while the prose still said three, and nothing failed: the sentence stayed
+        grammatical and stayed wrong, which is the whole failure mode this file exists for."""
+        readme = pathlib.Path(__file__).resolve().parent.parent / "README.md"
+        text = readme.read_text(encoding="utf-8")
+        stated = re.search(r"The (\w+) destinations it does not audit", text)
+        if stated is None:
+            self.skipTest("README states no skipped-destination count")
+        written = {"two": 2, "three": 3, "four": 4, "five": 5,
+                   "six": 6, "seven": 7, "eight": 8, "nine": 9}
+        urls = {
+            u for u, _, _ in check_links.extract_links(str(readme))
+            if u.startswith(("http://", "https://"))
+        }
+        skipped = {u for u in urls if check_links.is_self_chrome(u)}
+        self.assertEqual(
+            written.get(stated.group(1)),
+            len(skipped),
+            "README.md says there are %r destinations it does not audit; extracting the links "
+            "finds %d. Any badge or link to this repository's own pages moves this."
+            % (stated.group(1), len(skipped)),
+        )
+
     def test_every_excused_destination_is_still_in_the_readme(self):
         """An exemption for a link that has been removed stops excusing anything and starts
         hiding the fact that the list no longer cites the source it was written for."""
