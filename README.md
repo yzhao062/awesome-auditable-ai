@@ -323,6 +323,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 **\[Python\] auditable** ([yzhao062/auditable](https://github.com/yzhao062/auditable)): records which inputs a consequential agent action relied on, re-evaluates that action against current state, and reverses the committed action through a pluggable rail when its supporting conditions no longer hold. Apache-2.0, 2026-present.
 
+**[Python] Proofline** ([ceodaradigu/proofline-agent](https://github.com/ceodaradigu/proofline-agent)): verification-first agent that turns task contracts into deterministic SHA-256 proof packets, rejects missing, stale, or contradictory evidence, and gates external actions behind human approval. MIT-licensed, 2026-present.
+
 ---
 
 ## Security Auditing and Scanners
