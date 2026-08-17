@@ -461,7 +461,7 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 **\[Python\] A2E** ([datamllab/A2E](https://github.com/datamllab/A2E)): end-to-end agent auditing engine that uses the Agent Task Protocol to integrate tasks with different harnesses, automatically captures standardized execution traces, and assesses execution efficiency, tool use, task planning, and error recovery with multidimensional metrics. MIT-licensed, 2026-present. [\[Paper\]](https://arxiv.org/abs/2608.07346) (Preprint 2026)
 
-**\[TypeScript\] Awesome Agentic Engineering** ([lindixu6-hash/awesome-agentic-engineering](https://github.com/lindixu6-hash/awesome-agentic-engineering)): production-readiness toolkit that scores agent specifications, gates releases by risk profile and unresolved blockers, and runs prompt-injection fixtures through reproducible adapters that retain machine-readable results and node-linked tool and policy traces. MIT-licensed, 2026-present.
+**\[JavaScript\] Awesome Agentic Engineering** ([lindixu6-hash/awesome-agentic-engineering](https://github.com/lindixu6-hash/awesome-agentic-engineering)): GitHub Action and CLI that scores an agent specification against risk-tiered profiles, fails a release on unresolved blockers, and runs eight prompt-injection fixtures through LangGraph and OpenAI Agents adapters that retain node-linked traces and machine-readable results. MIT-licensed, 2026-present.
 
 ---
 
