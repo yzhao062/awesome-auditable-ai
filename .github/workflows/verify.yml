@@ -5,6 +5,15 @@ on:
     paths:
       - README.md
       - "tools/**"
+  # A merge is the moment the list changes, and until this trigger existed nothing verified the
+  # result: the workflow ran on pull requests and on a Monday cron, so three merges on a Sunday
+  # went unchecked against live destinations for a week. A pull request is verified against the
+  # branch, not against what main becomes after the squash.
+  push:
+    branches: [main]
+    paths:
+      - README.md
+      - "tools/**"
   schedule:
     - cron: "23 9 * * 1"
   workflow_dispatch:
@@ -205,8 +214,13 @@ jobs:
               print()
           PY
 
+      # Filing the issue is how the audit reports, not part of the audit. When GitHub's API was
+      # returning 503 this step failed and took a passing audit red with it, which is the worst
+      # possible reading: the run said the links were broken when the audit had exited 0 and the
+      # only thing broken was GitHub. The audit's own verdict is enforced by the final step.
       - name: Open or update audit issue
         if: steps.audit.outputs.report_changed == 'true' || steps.audit.outputs.exit_code != '0'
+        continue-on-error: true
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -312,14 +326,33 @@ jobs:
           PY
 
           title="Weekly link audit needs attention"
-          issue_numbers="$(gh issue list --state open --limit 100 --json number,title \
-            --jq '.[] | select(.title == "Weekly link audit needs attention") | .number')"
-          issue_number="${issue_numbers%%$'\n'*}"
-          if [[ -n "$issue_number" ]]; then
-            gh issue edit "$issue_number" --title "$title" --body-file "$issue_body"
-          else
-            gh issue create --title "$title" --body-file "$issue_body"
-          fi
+
+          # The gh issue subcommands go through GraphQL, which returned 503 for an extended
+          # period on 2026-08-17 while the REST endpoints stayed up. Retry before giving up, and
+          # let continue-on-error absorb a sustained outage: a report that could not be filed is
+          # a notification problem, not a finding about the list.
+          post_issue() {
+            local numbers number
+            numbers="$(gh issue list --state open --limit 100 --json number,title \
+              --jq '.[] | select(.title == "Weekly link audit needs attention") | .number')" \
+              || return 1
+            number="${numbers%%$'\n'*}"
+            if [[ -n "$number" ]]; then
+              gh issue edit "$number" --title "$title" --body-file "$issue_body"
+            else
+              gh issue create --title "$title" --body-file "$issue_body"
+            fi
+          }
+
+          for attempt in 1 2 3; do
+            if post_issue; then
+              exit 0
+            fi
+            echo "::warning title=Audit report not filed::Attempt ${attempt} failed; retrying."
+            sleep "$((attempt * 15))"
+          done
+          echo "::warning title=Audit report not filed::GitHub did not accept the report after three attempts. The audit's own result is unaffected and is enforced by the next step."
+          exit 1
 
       - name: Fail when the strict audit failed
         if: steps.audit.outputs.exit_code != '0'

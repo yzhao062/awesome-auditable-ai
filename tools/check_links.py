@@ -79,6 +79,48 @@ KNOWN_BOT_WALLS = {
         "a browser.",
 }
 
+
+def _wall_statuses():
+    """Map each excused destination to the set of statuses its exemptions record."""
+    out = {}
+    for url, status in KNOWN_BOT_WALLS:
+        out.setdefault(url, set()).add(status)
+    return out
+
+
+# An exemption makes a destination's verdict predictable, but nothing makes its observed status
+# predictable: the Scholar entry above says so outright, and ISO behaves the same way. The same
+# audit therefore produced two different reports depending on where it ran, the weekly job
+# compared the committed report against its own and filed an issue every Monday over a
+# difference that meant nothing, and the real signal was lost in a recurring false alarm.
+#
+# These destinations are now reported from the recorded exemption rather than from whatever the
+# wall did on the day, which makes the report reproducible from any address. They are still
+# fetched, and the exemption still covers exactly the recorded status: a 404 or a DNS failure at
+# an excused URL is the outage the exemption was never meant to hide, and it still fails.
+WALL_STATUSES = _wall_statuses()
+
+
+def is_bot_walled(url):
+    """True when a destination carries a recorded exemption for at least one status."""
+    return url in WALL_STATUSES
+
+
+def is_wall_covered(url, status):
+    """True when an excused destination behaved in a way its exemption accounts for.
+
+    A plain success counts. A wall that lets one caller through and blocks the next is the
+    behaviour being absorbed here, so 200 is not treated as a surprise.
+    """
+    return status in (200, 206) or status in WALL_STATUSES.get(url, ())
+
+
+def wall_reason(url):
+    """The recorded reason, joined when a destination carries more than one exemption."""
+    return " ".join(
+        KNOWN_BOT_WALLS[(url, status)] for status in sorted(WALL_STATUSES.get(url, ()))
+    )
+
 # This audit exists to check the resources the list cites. A few destinations in the README
 # are not cited resources: they are the repository's own furniture, the status badges and the
 # GitHub pages behind them. Auditing those is a category error, and it cost twice. GitHub
@@ -503,9 +545,15 @@ def main():
         if index < len(urls):
             time.sleep(args.delay)
 
-    resolved = [r for r in rows if r[1] in (200, 206)]
-    unresolved = [r for r in rows if r[1] not in (200, 206)]
-    unexpected = [r for r in unresolved if (r[0], r[1]) not in KNOWN_BOT_WALLS]
+    # Excused destinations are held out of the observed-status tallies so that the report reads
+    # the same from a workstation and from a runner. They are still fetched, and one that breaks
+    # in a way its exemption does not record rejoins the failures below.
+    exempt = [r for r in rows if is_bot_walled(r[0])]
+    exempt_broken = [r for r in exempt if not is_wall_covered(r[0], r[1])]
+    observed = [r for r in rows if not is_bot_walled(r[0])]
+    resolved = [r for r in observed if r[1] in (200, 206)]
+    unresolved = [r for r in observed if r[1] not in (200, 206)]
+    unexpected = unresolved + exempt_broken
     pr_blocking = [r for r in unexpected if is_pull_request_failure(r[1])]
     pr_warnings = [r for r in unexpected if not is_pull_request_failure(r[1])]
     today = datetime.date.today().isoformat()
@@ -522,6 +570,8 @@ def main():
         "| Audit date | %s |" % today,
         "| Failure policy | `%s` |" % args.failure_policy,
         "| Distinct link destinations | %d |" % len(rows),
+        "| Reported from a recorded exemption, listed below | %d |" % len(exempt),
+        "| Reported from the status observed today | %d |" % len(observed),
         "| Resolved (200 or 206) | %d |" % len(resolved),
         "| Did not resolve | %d |" % len(unresolved),
         "| Unresolved and not a known bot wall | %d |" % len(unexpected),
@@ -550,6 +600,13 @@ def main():
         "field is correct, or whether a non-arXiv destination contains the claimed content. This",
         "repository's own badges and the GitHub pages behind them are also not checked, and each",
         "one is named under Repository Chrome Not Audited rather than counted as passing.",
+        "",
+        "Reported rather than observed: a destination that refuses automated clients is fetched on",
+        "every run, but its row reports the exemption recorded for it instead of the status it",
+        "returned today, because that status depends on the address the audit runs from. This is",
+        "what makes the file reproducible, so a difference between two runs means the list changed",
+        "rather than that the caller moved. An excused destination that answers something its",
+        "exemption does not record is reported on what it actually returned, and fails.",
         "",
         "Titles count as agreeing only when they are identical after case folding and punctuation",
         "removal, so a near-identical title is never silently accepted. A remaining difference of",
@@ -587,20 +644,55 @@ def main():
     else:
         lines += ["None. Every arXiv page reports the identifier in its own URL.", ""]
 
+    def unexpected_note(url, status):
+        """Say why a row is unexplained, which differs for an excused destination."""
+        if not is_bot_walled(url):
+            return "not a recorded exception"
+        recorded = "/".join(str(s) for s in sorted(WALL_STATUSES[url]))
+        return ("carries an exemption for %s, but answered %s, which the exemption does not "
+                "account for" % (recorded, status))
+
     lines += ["## Destinations That Did Not Return 200", ""]
-    if unresolved:
+    if unexpected:
         lines += [
-            "A non-200 result is not automatically a dead link: some publishers refuse automated",
-            "requests. Destinations listed in `KNOWN_BOT_WALLS` in `tools/check_links.py` carry a",
-            "recorded reason and were confirmed by hand. The strict policy fails every other row;",
-            "the pull-request policy applies the narrower rule described above.",
+            "Every row here is unexplained. Destinations carrying a recorded exemption are listed",
+            "in their own section and never appear in this one, so a row below is either a",
+            "destination with no exemption at all, or an excused destination that broke in a way",
+            "its exemption does not account for. The strict policy fails every row; the",
+            "pull-request policy applies the narrower rule described above.",
             "",
             "| Status | URL | Note |",
             "|---|---|---|",
         ]
         lines += [
-            "| %s | %s | %s |" % (s, u, KNOWN_BOT_WALLS.get((u, s), "not a recorded exception"))
-            for u, s, _, _, _ in unresolved
+            "| %s | %s | %s |" % (s, u, unexpected_note(u, s))
+            for u, s, _, _, _ in unexpected
+        ] + [""]
+    else:
+        lines += ["None.", ""]
+
+    lines += ["## Destinations Reported From a Recorded Exemption", ""]
+    if exempt:
+        lines += [
+            "These destinations refuse automated clients, and each carries a recorded reason in",
+            "`KNOWN_BOT_WALLS` in `tools/check_links.py` that was confirmed by hand in a browser.",
+            "They are fetched on every run, but the table below reports the recorded exemption",
+            "rather than the status observed today, because the observed status depends on where",
+            "the audit runs: the same wall answers a workstation and a datacenter address",
+            "differently. Reporting the observation made this file unreproducible, so the weekly",
+            "job saw the committed report disagree with its own on every run and raised an alarm",
+            "that never meant anything. The exemption still covers only the status it records. An",
+            "excused destination that answers anything else appears in the section above and fails",
+            "the audit.",
+            "",
+            "| Recorded status | URL | Recorded reason |",
+            "|---|---|---|",
+        ]
+        lines += [
+            "| %s | %s | %s |" % (
+                "/".join(str(s) for s in sorted(WALL_STATUSES[u])), u, wall_reason(u),
+            )
+            for u, _, _, _, _ in exempt
         ] + [""]
     else:
         lines += ["None.", ""]
@@ -622,7 +714,17 @@ def main():
     else:
         lines += ["None.", ""]
 
-    counts = Counter(str(r[1]) for r in rows)
+    def shown_status(url, status):
+        """Render an excused destination as `exempt` so the file does not vary by caller address.
+
+        A destination that broke in a way its exemption does not cover keeps its real status, so
+        holding the report steady never hides an outage.
+        """
+        if is_bot_walled(url) and is_wall_covered(url, status):
+            return "exempt"
+        return str(status)
+
+    counts = Counter(shown_status(r[0], r[1]) for r in rows)
     lines += ["## Status Code Distribution", "", "| Status | Count |", "|---|---:|"]
     lines += ["| %s | %d |" % (k, v) for k, v in sorted(counts.items())] + [""]
 
@@ -633,7 +735,7 @@ def main():
         "|---:|---|---|---|---|",
     ]
     lines += [
-        "| %d | %s | %s | %s | %s |" % (n, s, i, t, u)
+        "| %d | %s | %s | %s | %s |" % (n, shown_status(u, s), i, t, u)
         for n, (u, s, i, t, _) in enumerate(rows, 1)
     ] + [""]
 

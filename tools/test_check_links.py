@@ -151,6 +151,48 @@ class ReachabilityPolicy(unittest.TestCase):
         """A timeout at an excused URL is an outage, not the documented bot wall."""
         self.assertEqual(run_audit([(self.WALL, None, "link")], [("TimeoutError", "")])[0], 1)
 
+    def test_a_wall_reports_the_same_whether_it_blocks_or_lets_us_through(self):
+        """The report must not depend on where the audit ran from.
+
+        This is the whole of issue #9. ISO answers 200 to a workstation and 403 to a datacenter
+        address, so the committed report and the one the weekly job regenerated could never
+        agree, the job filed an issue every Monday over a difference that meant nothing, and a
+        genuine finding would have arrived looking exactly like the noise.
+        """
+        blocked = run_audit([(self.WALL, None, "link")], [(403, "")])
+        allowed = run_audit([(self.WALL, None, "link")], [(200, "")])
+        self.assertEqual(blocked[0], 0)
+        self.assertEqual(allowed[0], 0)
+        strip = lambda text: re.sub(r"\| Audit date \|[^|]*\|", "", text)
+        self.assertEqual(
+            strip(blocked[1]),
+            strip(allowed[1]),
+            "the report differs depending on whether the wall blocked this caller, so two "
+            "honest runs of an unchanged list still disagree.",
+        )
+
+    def test_an_excused_destination_is_named_with_its_recorded_reason(self):
+        _, report = run_audit([(self.WALL, None, "link")], [(403, "")])
+        self.assertIn("Destinations Reported From a Recorded Exemption", report)
+        self.assertIn(self.WALL, report)
+        self.assertIn(check_links.KNOWN_BOT_WALLS[(self.WALL, 403)], report)
+
+    def test_an_undeclared_status_at_an_excused_url_is_reported_on_what_it_returned(self):
+        """Holding the report steady must never turn a real outage into a quiet `exempt`."""
+        code, report = run_audit([(self.WALL, None, "link")], [(404, "")])
+        self.assertEqual(code, 1)
+        failures = report.split("## Destinations That Did Not Return 200", 1)[1]
+        failures = failures.split("\n## ", 1)[0]
+        self.assertIn("404", failures)
+        self.assertIn(self.WALL, failures)
+
+    def test_every_excused_destination_has_a_reason_that_is_not_empty(self):
+        """An exemption with no recorded reason is an undocumented tolerance for a non-200."""
+        for (url, status), reason in check_links.KNOWN_BOT_WALLS.items():
+            with self.subTest(url=url, status=status):
+                self.assertTrue(reason.strip(), "no recorded reason for %s (%s)" % (url, status))
+                self.assertIn(status, check_links.WALL_STATUSES[url])
+
     def test_self_chrome_is_skipped_rather_than_fetched(self):
         """A rate limit on this repository's own pages must not fail an audit of other work."""
         chrome = "https://github.com/%s/actions/workflows/verify.yml" % check_links.SELF_REPO
