@@ -326,6 +326,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 **\[Python\] Proofline** ([ceodaradigu/proofline-agent](https://github.com/ceodaradigu/proofline-agent)): verification-first agent that turns task contracts into deterministic SHA-256 proof packets, rejects missing, stale, or contradictory evidence, and gates external actions behind human approval. MIT-licensed, 2026-present.
 
+**\[Rust\] [SEMAPRAX](https://wavect.io/semaprax/)** ([wavect/semaprax](https://github.com/wavect/semaprax)): experimental systems-language compiler whose bounded injected-host Agent Runtime emits canonical Trace and Evidence documents for one run and independently replays them; its semantic-change routes replay digest-bound evidence before atomic application. Apache-2.0, 2026-present; v0.2 pre-alpha with no built-in model, transport, durable memory, keys, or production authority.
+
 ---
 
 ## Security Auditing and Scanners
