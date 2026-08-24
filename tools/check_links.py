@@ -63,16 +63,28 @@ UA = (
 
 # Destinations known to refuse automated requests while being reachable in a browser. Each
 # entry is an explicit, inspectable exception rather than a blanket tolerance for non-200.
-# Each entry excuses ONE specific status for ONE destination. The status is part of the key so
-# that a genuine outage at an excused URL (a DNS failure, a timeout, a 404) is still a failure
-# rather than being masked by the exemption.
+# Each entry excuses ONE specific status, and a destination may carry more than one when its
+# answer depends on who is asking (EUR-Lex below answers 202 to some clients and 403 to others).
+# The status is part of the key so that a genuine outage at an excused URL, a DNS failure or a
+# timeout or a 404, is still a failure rather than being masked by the exemption.
+#
+# Widen an entry only with evidence, and record that evidence in the note. The EUR-Lex 403 was
+# added after a runner hit a status no entry covered; the audit refused to pass it, which is the
+# behaviour working, and the page was then confirmed live by hand before the status was recorded.
 KNOWN_BOT_WALLS = {
     ("https://www.iso.org/standard/42001", 403):
         "ISO returns 403 to non-browser clients; verified by hand in a browser.",
     ("https://eur-lex.europa.eu/eli/reg/2026/1744/oj", 202):
-        "EUR-Lex answers non-browser clients with an empty 202 from its JavaScript gateway; the "
-        "cited act (Digital Omnibus on AI, in force 27 July 2026) was confirmed against the "
+        "EUR-Lex answers some non-browser clients with an empty 202 from its JavaScript gateway; "
+        "the cited act (Digital Omnibus on AI, in force 27 July 2026) was confirmed against the "
         "European Commission announcement and independent legal summaries.",
+    ("https://eur-lex.europa.eu/eli/reg/2026/1744/oj", 403):
+        "EUR-Lex also refuses datacenter clients outright. Recorded 2026-08-24 after a GitHub "
+        "runner answered 403 where only the 202 above was on file, which failed a contributor's "
+        "pull request over a page that is fine: the same URL served 200 and 13,692 bytes of the "
+        "act from a workstation on three consecutive requests the same day. Two statuses are "
+        "recorded for this one destination because the wall's answer depends on who is asking, "
+        "which is the property this report is built to stay stable against.",
     ("https://scholar.google.com/citations?user=zoGDYsoAAAAJ&hl=en", 403):
         "Google Scholar serves 403 to datacenter clients, so this destination resolves from a "
         "workstation and fails from a GitHub-hosted runner; the profile was verified by hand in "
