@@ -468,6 +468,8 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 **\[Python\] AgentCheck** ([WaseemGhanem98/AgentCheck](https://github.com/WaseemGhanem98/AgentCheck)): open-source behavioral testing tool for tool-using AI agents that simulates declared tool execution while evaluating tool calls, failures, retries, confirmations, destructive actions, action sequencing, and fabricated success, with integrations for OpenAI Agents SDK, PydanticAI, and custom Python agents. Apache-2.0, 2026-present.
 
+**\[Shell\] agent-watch** ([soul-sol/agent-watch](https://github.com/soul-sol/agent-watch)): POSIX-shell launcher and one-shot watcher for background coding agents that classifies runs as running, done, failed, or stalled from PID state, recorded exit code, and tail-scoped completion markers, with structured Codex JSONL terminal-event support. MIT-licensed, 2026-present.
+
 ---
 
 ## Standards and Governance
