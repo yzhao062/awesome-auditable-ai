@@ -434,6 +434,8 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 **\[Python\] Helicone** ([Helicone/helicone](https://github.com/Helicone/helicone)): open-source observability platform and AI gateway that logs LLM and agent traces, costs, and latency through a proxy and a unified API across providers. Apache-2.0, 2023-present.
 
+**[Go] Bifrost** ([maximhq/bifrost](https://github.com/maximhq/bifrost)): OpenAI-compatible gateway for multi-provider routing, failover, usage controls, guardrails, MCP, and production observability, including Prometheus metrics, distributed tracing, and logging. Apache-2.0, 2025-present.
+
 **\[Python\] DeepEval** ([confident-ai/deepeval](https://github.com/confident-ai/deepeval)): open-source evaluation framework that runs LLM and agent tests in a pytest-style workflow, with metrics for hallucination, relevancy, and task correctness that can be included in CI checks. Apache-2.0, 2023-present.
 
 **\[Python\] Evidently** ([evidentlyai/evidently](https://github.com/evidentlyai/evidently)): open-source framework to evaluate, test, and monitor ML and LLM systems, with 100+ built-in metrics spanning tabular data quality, data drift, and LLM judges. Apache-2.0, 2020-present.
