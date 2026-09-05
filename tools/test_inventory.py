@@ -15,11 +15,16 @@ import pathlib
 import tempfile
 import unittest
 
-_SPEC = importlib.util.spec_from_file_location(
-    "inventory", pathlib.Path(__file__).with_name("inventory.py")
-)
-inventory = importlib.util.module_from_spec(_SPEC)
-_SPEC.loader.exec_module(inventory)
+def _load_sibling(name):
+    spec = importlib.util.spec_from_file_location(
+        name, pathlib.Path(__file__).with_name(name + ".py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+inventory = _load_sibling("inventory")
 
 README = pathlib.Path(__file__).resolve().parent.parent / "README.md"
 
@@ -125,6 +130,35 @@ class ReadmeClaims(unittest.TestCase):
                     "sentence is stating a number this repository cannot reproduce."
                     % (computed, label, computed),
                 )
+
+    def test_readme_and_card_are_already_recounted(self):
+        """Every derived figure at once, and the one that names its own fix.
+
+        The tests above each catch one stale number and say which. This one runs the rewriter
+        over the committed files and asserts it has nothing to change, which is the property
+        that actually matters at merge time: a batch of merges moves ten figures across two
+        files, and the operator needs one command rather than ten hand edits. It fails with the
+        command that fixes it.
+        """
+        recount = _load_sibling("recount")
+        figures = recount.compute(README)
+        readme_text = README.read_text(encoding="utf-8")
+        self.assertEqual(
+            recount.rewrite_readme(readme_text, figures),
+            readme_text,
+            "README.md carries a derived figure that no longer matches the list. "
+            "Run `python tools/recount.py README.md`.",
+        )
+        card = README.parent / "assets" / "social-card.html"
+        if not card.exists():
+            self.skipTest("social card not present")
+        card_text = card.read_text(encoding="utf-8")
+        self.assertEqual(
+            recount.rewrite_card(card_text, figures),
+            card_text,
+            "assets/social-card.html is stale. Run `python tools/recount.py README.md`, then "
+            "re-render the PNG with `python assets/render_social.py`.",
+        )
 
     def test_social_card_matches_the_inventory(self):
         """The card is the first thing a link preview shows, and nothing else checks it."""

@@ -260,7 +260,7 @@ class ReachabilityPolicy(unittest.TestCase):
         a base missing the other's link, and the stated figure was short by one."""
         readme = pathlib.Path(__file__).resolve().parent.parent / "README.md"
         text = readme.read_text(encoding="utf-8")
-        stated = re.search(r"across (\d+) destinations", text)
+        stated = re.search(r"cites (\d+) destinations it audits", text)
         if stated is None:
             self.skipTest("README states no destination count")
         urls = {
