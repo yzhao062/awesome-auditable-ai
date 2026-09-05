@@ -531,6 +531,8 @@ several tools in this list build on.
 
 **\[Standard\] DSSE (Dead Simple Signing Envelope)** ([secure-systems-lab/dsse](https://github.com/secure-systems-lab/dsse)): signing envelope that authenticates a payload together with its type, removing the canonicalization ambiguity that lets a signature be replayed against a different interpretation of the same bytes; used by in-toto and Sigstore. Secure Systems Lab, 2021-2026.
 
+**[Standard] Agent Oversight Framework（AI 执行与监察体系）** ([spec repo](https://github.com/ZhangRui987/agent-oversight-framework)): A layered governance specification that grades every claim A/B/C/D against 26 citable sources and defines an evidence-integrity subsystem (E1–E5) for reconstructing what an agent did, what it relied on, and why it acted. ZhangRui987 (independent), v1.0.0 (2026-08-30).
+
 **\[Tool\] Rekor** ([sigstore/rekor](https://github.com/sigstore/rekor)): transparency log service for signed software artifacts and attestations, built on an append-only Merkle log and serving inclusion and consistency proofs over a public API. Sigstore / OpenSSF, Apache-2.0, 2020-present.
 
 ---
