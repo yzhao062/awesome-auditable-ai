@@ -315,6 +315,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 **\[TypeScript\] aegis** ([Justin0504/Aegis](https://github.com/Justin0504/Aegis)): runtime policy enforcement for AI agents with a cryptographic audit trail, human-in-the-loop approvals, and a kill switch, implemented as a wrapper around agent code. MIT-licensed, 2026-present.
 
+**\[TypeScript\] sofagent** ([KongFangXun/sofagent](https://github.com/KongFangXun/sofagent)): commit-time audit engine for AI agents that scans git diffs with 24 rules covering secret leaks, out-of-scope edits, blind modifications without prior reads, prompt injection in commit messages, and unauthorized file changes, writing results to an HMAC-signed local audit history, with MCP tools for governance aggregation and a doctor command for integrity checks. MIT-licensed, 2026-present.
+
 **\[Python\] halo-record** ([bkuan001/halo-record](https://github.com/bkuan001/halo-record)): dependency-free recorder that seals tool calls, model calls, and approvals into a SHA-256 hash-chained JSONL log verifiable without trusting the operator, with optional RFC 3161 timestamping and OpenTelemetry GenAI span ingestion. Apache-2.0, 2026-present.
 
 **\[Python, TypeScript\] Agent Governance Toolkit** ([microsoft/agent-governance-toolkit](https://github.com/microsoft/agent-governance-toolkit)): policy enforcement, agent identity, and execution sandboxing with a Merkle-chained audit trail and a Decision BOM, published with control mappings to the OWASP Agentic Top 10, NIST AI RMF 1.0, the EU AI Act, and SOC 2. MIT-licensed, 2026-present; public preview with breaking changes expected.
