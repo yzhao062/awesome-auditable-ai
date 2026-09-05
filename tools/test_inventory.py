@@ -100,9 +100,11 @@ class ReadmeClaims(unittest.TestCase):
     def test_readme_states_the_entry_count_it_computes(self):
         """The headline count is a claim about this repository, so recompute it here.
 
-        The stated section count is parsed rather than hard-coded. Writing `nine` in here made
-        a legitimately recounted README fail a test whose message says a figure is stale, and
-        re-running the repair command could not fix it, because nothing was stale.
+        The expected sentence is regenerated from the computed section count rather than
+        hard-coded. Writing `nine` in here made a legitimately recounted README fail a test
+        whose message says a figure is stale, and re-running the repair command could not fix
+        it, because nothing was stale. The English of the spelled count is pinned separately,
+        in test_the_number_words_mean_what_they_say.
         """
         recount = _load_sibling("recount")
         data = inventory.analyze(str(README))
@@ -226,15 +228,24 @@ class RecountRewriter(unittest.TestCase):
         self.assertIn("found 0 places", str(raised.exception))
 
     def test_the_cross_listed_count_is_written_and_not_only_computed(self):
-        """It was computed and returned, but no rewriter consumed it, so it stayed manual."""
-        stale = self.text.replace(
+        """It was computed and returned, but no rewriter consumed it, so it stayed manual.
+
+        The expected text is produced by the writer against a pinned count rather than taken
+        from the committed README. Comparing against the committed file made this fail for any
+        pull request whose other figures were not yet recounted, which is every ordinary
+        contribution, and blamed the cross-list count for a difference in the entry totals.
+        """
+        figures = dict(self.figures, cross_listed=5)
+        expected = self.recount.rewrite_readme(self.text, figures)
+        self.assertIn("Five papers are deliberately cross-listed", expected)
+        stale = expected.replace(
             "Five papers are deliberately cross-listed",
             "Four papers are deliberately cross-listed",
         )
-        self.assertNotEqual(stale, self.text, "the sentence this test edits was reworded")
+        self.assertNotEqual(stale, expected)
         self.assertEqual(
-            self.recount.rewrite_readme(stale, self.figures),
-            self.text,
+            self.recount.rewrite_readme(stale, figures),
+            expected,
             "recount did not restore the cross-listed-paper count.",
         )
 
@@ -251,6 +262,21 @@ class RecountRewriter(unittest.TestCase):
             "The 11 destinations it does not audit",
             self.recount.rewrite_readme(self.text, many),
         )
+
+    def test_the_number_words_mean_what_they_say(self):
+        """An oracle the writer and its reader do not share.
+
+        Both sides read NUMBER_WORDS, so they agree with each other by construction: renaming
+        four to three would put the wrong word in the README and still pass every test that
+        decodes it through the same table. This is the only place the English is pinned.
+        """
+        self.assertEqual(
+            {1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
+             6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"},
+            self.recount.NUMBER_WORDS,
+        )
+        self.assertEqual("11", self.recount._word(11))
+        self.assertEqual("0", self.recount._word(0))
 
 
 if __name__ == "__main__":

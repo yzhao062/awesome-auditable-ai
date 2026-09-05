@@ -5,8 +5,9 @@ and cross-listing totals, the table-row breakdown, arXiv and repository counts, 
 and framework labels, and the destination counts an audit would cover. Keeping them correct by
 hand is what made a batch of merges fail: each merge adds an entry, every figure moves, and the
 state between the first merge and the last recount is inconsistent by construction. Six
-consecutive pushes to main failed that way on 2026-09-04, and none of the six was a finding
-anyone could act on.
+consecutive pushes to main failed that way on 2026-09-04. All six reported stale list figures
+and told the reader to recount, which was accurate; the problem was that a state the operator
+was already partway through fixing had no separate way to say so.
 
 Every figure here is derived without network access, in well under a second. Three things in
 the audit paragraph need a real run: its date, its verdict, and how many comparisons it

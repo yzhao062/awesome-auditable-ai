@@ -365,10 +365,27 @@ class OfflineFiguresAgainstTheAudit(unittest.TestCase):
     """
 
     ARXIV = "https://arxiv.org/abs/2501.00001"
+    OTHER = "https://arxiv.org/abs/2501.00002"
     TITLE = "A Sufficiently Long Paper Title"
+    OTHER_TITLE = "Another Sufficiently Long Paper Title"
 
     def _links(self):
-        return [(self.ARXIV, self.TITLE, "link")]
+        """Two arXiv destinations, one of them cross-listed, plus rows that must not count.
+
+        A single-link fixture cannot see the distinction this class exists for: swapping the
+        occurrence count for a distinct-pair count passed a one-link version of these tests
+        while reintroducing the 128-against-130 divergence on the real list. Here the repeated
+        title makes three occurrences over two destinations, so the two rules give different
+        answers and only the audit's own rule matches.
+        """
+        return [
+            (self.ARXIV, self.TITLE, "link"),
+            (self.ARXIV, self.TITLE, "link"),
+            (self.OTHER, self.OTHER_TITLE, "link"),
+            (self.OTHER, "Code", "link"),
+            ("https://example.org/not-arxiv", "Some Ordinary Destination", "link"),
+            ("https://github.com/%s/commits/main" % check_links.SELF_REPO, None, "link"),
+        ]
 
     def _figures(self, links):
         # recount imports its own copy of check_links, so the fixture has to be installed on
@@ -380,22 +397,41 @@ class OfflineFiguresAgainstTheAudit(unittest.TestCase):
             return recount.compute(readme)
 
     def test_offline_and_runtime_agree_when_every_page_answers(self):
-        """Under complete metadata the two totals match, which is the documented precondition."""
+        """Under complete metadata the two totals match, which is the documented precondition.
+
+        The expected 3 and 2 are written out rather than derived from the offline figures, so a
+        counting rule that changed on both sides at once would still fail here.
+        """
         links = self._links()
-        body = meta("2501.00001", self.TITLE)
-        _, report = run_audit(links, [(200, body)])
+        # Fetched once per distinct destination, in sorted order; the self-chrome row is skipped.
+        responses = [(200, meta("2501.00001", self.TITLE)),
+                     (200, meta("2501.00002", self.OTHER_TITLE)),
+                     (200, "")]
+        _, report = run_audit(links, responses)
+        self.assertIn("| arXiv titles compared with `citation_title` | 3 |", report)
+        self.assertIn("| arXiv identifiers compared with `citation_arxiv_id` | 2 |", report)
+
         figures = self._figures(links)
-        self.assertIn("| arXiv titles compared with `citation_title` | %d |"
-                      % figures["title_checks"], report)
-        self.assertIn("| arXiv identifiers compared with `citation_arxiv_id` | %d |"
-                      % figures["arxiv_ids_checked"], report)
+        self.assertEqual(3, figures["title_checks"])
+        self.assertEqual(2, figures["arxiv_ids_checked"])
+        self.assertEqual(3, figures["audited"])
+        self.assertEqual(1, figures["skipped"])
 
     def test_a_page_that_returns_no_title_lowers_the_run_but_not_the_list(self):
-        """The divergence the README must not paper over: eligible stays 1, compared drops."""
+        """The divergence the README must not paper over: eligible holds, compared drops."""
         links = self._links()
-        _, report = run_audit(links, [(200, meta("2501.00001", ""))])
-        self.assertEqual(1, self._figures(links)["title_checks"])
-        self.assertIn("| arXiv titles compared with `citation_title` | 0 |", report)
+        responses = [(200, meta("2501.00001", "")),
+                     (200, meta("2501.00002", self.OTHER_TITLE)),
+                     (200, "")]
+        code, report = run_audit(links, responses)
+        self.assertEqual(3, self._figures(links)["title_checks"])
+        self.assertIn("| arXiv titles compared with `citation_title` | 1 |", report)
+        self.assertEqual(
+            1, code,
+            "a title that could not be verified must fail a strict run. That is what keeps the "
+            "gap between eligible and compared from ever being silently absorbed: the offline "
+            "count cannot see it, and the audit refuses to pass while it exists.",
+        )
 
 
 class Extraction(unittest.TestCase):
