@@ -477,6 +477,8 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 **\[TypeScript\] OrcaReplay** ([Continuum-AI-Corp/OrcaReplay](https://github.com/Continuum-AI-Corp/OrcaReplay)): records a coding-agent run below the harness, placing model calls, per-turn workspace changes, and opt-in MCP frames on one timeline. It then re-executes the agent against the recorded model responses and reports divergence, or forks the run from a filesystem checkpoint onto a different model for comparison. Apache-2.0, 2026-present.
 
+**\[TypeScript\] YYLO Benchmark** ([yylo-dev/yylo-benchmark](https://github.com/yylo-dev/yylo-benchmark)): isolated evaluation layer for agent runs that normalizes every case into one v2 attempt contract, runs each candidate in a private fresh-repository workspace behind a selective filesystem sandbox, and evaluates retained evidence with ordered deterministic and/or LLM profiles. Workspace receipts, post-execution Git manifests, and evaluator provenance are hash-linked, and doctor, report, recovery, and re-evaluation fail closed unless each attempt's complete retained chain verifies. Runs as `yylo-benchmark`, or as `yy benchmark` delegated from the YYLO orchestrator CLI. MIT-licensed, 2026-present.
+
 ---
 
 ## Standards and Governance
