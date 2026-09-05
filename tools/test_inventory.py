@@ -98,15 +98,29 @@ class WindowBoundaries(unittest.TestCase):
 )
 class ReadmeClaims(unittest.TestCase):
     def test_readme_states_the_entry_count_it_computes(self):
-        """The headline count is a claim about this repository, so recompute it here."""
+        """The headline count is a claim about this repository, so recompute it here.
+
+        The stated section count is parsed rather than hard-coded. Writing `nine` in here made
+        a legitimately recounted README fail a test whose message says a figure is stale, and
+        re-running the repair command could not fix it, because nothing was stale.
+        """
+        recount = _load_sibling("recount")
         data = inventory.analyze(str(README))
         text = README.read_text(encoding="utf-8")
         self.assertIn(
-            "**%d entries across nine sections**" % data["entries"],
+            "**%d entries across %s sections**"
+            % (data["entries"], recount._word(len(data["sections"]))),
             text,
             "README.md states an entry count that inventory.py does not reproduce.",
         )
-        self.assertEqual(9, len(data["sections"]))
+
+    def test_the_list_still_has_nine_sections(self):
+        """A separate claim from the hero figure: the taxonomy itself is meant to be stable.
+
+        A tenth section is a deliberate editorial act, so it should fail here, under a name
+        that says the taxonomy changed, rather than inside a test about a stale number.
+        """
+        self.assertEqual(9, len(inventory.analyze(str(README))["sections"]))
 
     def test_every_hero_number_is_reproducible(self):
         """The whole hero sentence is a set of claims, and each one drifts independently.
@@ -177,6 +191,66 @@ class ReadmeClaims(unittest.TestCase):
                     "assets/social-card.html does not show %d for %s. Update the card and "
                     "re-render the PNG with assets/render_social.py." % (value, label),
                 )
+
+
+class RecountRewriter(unittest.TestCase):
+    """What the rewriter must refuse, tested on text rather than on the committed README.
+
+    These run regardless of README_CLAIMS_LENIENT: they are properties of the tool, not claims
+    about the current list, so a contributor's pull request should run them too.
+    """
+
+    def setUp(self):
+        self.recount = _load_sibling("recount")
+        self.text = README.read_text(encoding="utf-8")
+        self.figures = self.recount.compute(README)
+
+    def test_a_second_copy_of_a_figure_is_refused_rather_than_left_stale(self):
+        """One substitution capped at one cannot tell one target from two.
+
+        A duplicated sentence used to absorb the single permitted rewrite and leave the copy
+        behind, with the tool reporting success and the suite passing.
+        """
+        doubled = self.text + (
+            "\nThe list cites 1 destinations it audits, among them 2 arXiv records and 3 "
+            "entry-title labels a run checks against the arXiv page itself.\n"
+        )
+        with self.assertRaises(SystemExit) as raised:
+            self.recount.rewrite_readme(doubled, self.figures)
+        self.assertIn("found 2 places", str(raised.exception))
+
+    def test_a_missing_target_is_refused_rather_than_silently_skipped(self):
+        removed = self.text.replace("deliberately cross-listed", "deliberately grouped")
+        with self.assertRaises(SystemExit) as raised:
+            self.recount.rewrite_readme(removed, self.figures)
+        self.assertIn("found 0 places", str(raised.exception))
+
+    def test_the_cross_listed_count_is_written_and_not_only_computed(self):
+        """It was computed and returned, but no rewriter consumed it, so it stayed manual."""
+        stale = self.text.replace(
+            "Five papers are deliberately cross-listed",
+            "Four papers are deliberately cross-listed",
+        )
+        self.assertNotEqual(stale, self.text, "the sentence this test edits was reworded")
+        self.assertEqual(
+            self.recount.rewrite_readme(stale, self.figures),
+            self.text,
+            "recount did not restore the cross-listed-paper count.",
+        )
+
+    def test_one_cross_listed_paper_reads_as_a_singular_sentence(self):
+        singular = dict(self.figures, cross_listed=1)
+        self.assertIn(
+            "One paper is deliberately cross-listed",
+            self.recount.rewrite_readme(self.text, singular),
+        )
+
+    def test_a_skipped_total_above_the_word_table_falls_back_to_digits(self):
+        many = dict(self.figures, skipped=11)
+        self.assertIn(
+            "The 11 destinations it does not audit",
+            self.recount.rewrite_readme(self.text, many),
+        )
 
 
 if __name__ == "__main__":

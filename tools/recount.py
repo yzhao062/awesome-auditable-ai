@@ -1,15 +1,18 @@
 """Rewrite every derived number in README.md and the social card.
 
-Ten figures in the prose and on the card are computed from the list itself: entry and section
-totals, table-row breakdown, arXiv and repository counts, the standards and framework labels,
-and the destination counts the audit would cover. Keeping them correct by hand is what made a
-batch of merges fail: each merge adds an entry, every figure moves, and the state between the
-first merge and the last recount is inconsistent by construction. Six consecutive pushes to
-main failed that way on 2026-09-04, and none of the six was a finding anyone could act on.
+Fourteen figures in the prose and on the card are computed from the list itself: entry, section
+and cross-listing totals, the table-row breakdown, arXiv and repository counts, the standards
+and framework labels, and the destination counts an audit would cover. Keeping them correct by
+hand is what made a batch of merges fail: each merge adds an entry, every figure moves, and the
+state between the first merge and the last recount is inconsistent by construction. Six
+consecutive pushes to main failed that way on 2026-09-04, and none of the six was a finding
+anyone could act on.
 
-Every figure here is derived without network access, in well under a second. Only two things in
-the audit paragraph need a real run: its date and its verdict. The prose keeps those in their
-own sentence so that adding an entry never rewrites a claim about a run that happened.
+Every figure here is derived without network access, in well under a second. Three things in
+the audit paragraph need a real run: its date, its verdict, and how many comparisons it
+actually completed. The counts written here are what the list makes available to compare, which
+is not the same number: a title is compared only when the page returns one. The prose keeps
+those apart so that adding an entry never rewrites a claim about a run that happened.
 
     python tools/recount.py README.md            # rewrite in place
     python tools/recount.py README.md --check    # exit 1 if anything would change
@@ -86,13 +89,19 @@ def compute(readme):
 
 
 def _sub(text, pattern, replacement, what):
-    """Substitute exactly one occurrence, or fail loudly rather than silently doing nothing."""
-    updated, count = re.subn(pattern, replacement, text, count=1)
+    """Substitute one occurrence, failing loudly on none and on more than one.
+
+    Passing count=1 here would cap the substitution before counting it, so the returned number
+    could only ever be zero or one and a second stale copy of the sentence would survive with
+    the guard reporting success. Substituting everywhere and rejecting a total other than one
+    is what makes the count mean what the error message says.
+    """
+    updated, count = re.subn(pattern, replacement, text)
     if count != 1:
         raise SystemExit(
-            "recount: found %d places to write %s, expected exactly 1. The sentence it edits "
-            "was reworded; update the pattern in tools/recount.py rather than leaving the "
-            "figure unmaintained." % (count, what)
+            "recount: found %d places to write %s, expected exactly 1. Either the sentence it "
+            "edits was reworded, or the figure now appears twice and one copy would go stale. "
+            "Fix the text, or update the pattern in tools/recount.py." % (count, what)
         )
     return updated
 
@@ -118,25 +127,38 @@ def rewrite_readme(text, figures):
     )
     text = _sub(
         text,
-        r"cites \d+ destinations it audits, and compares \d+ entry titles and \d+ identifiers",
-        "cites %d destinations it audits, and compares %d entry titles and %d identifiers"
-        % (figures["audited"], figures["title_checks"], figures["arxiv_ids_checked"]),
-        "the live destination and comparison counts",
+        r"cites \d+ destinations it audits, among them \d+ arXiv records and \d+ entry-title "
+        r"labels",
+        "cites %d destinations it audits, among them %d arXiv records and %d entry-title labels"
+        % (figures["audited"], figures["arxiv_ids_checked"], figures["title_checks"]),
+        "the live destination and eligible-comparison counts",
     )
     text = _sub(
         text,
-        r"The \w+ destinations it does not audit",
+        r"The \w+ destinations it does not audit(?= are this repository's own badges)",
         "The %s destinations it does not audit" % _word(figures["skipped"]),
         "the skipped-destination count",
+    )
+    text = _sub(
+        text,
+        r"\b\w+ papers? (?:are|is) deliberately cross-listed",
+        "%s %s deliberately cross-listed"
+        % (_plural(figures["cross_listed"], "paper").capitalize(),
+           "is" if figures["cross_listed"] == 1 else "are"),
+        "the cross-listed-paper count",
     )
     return text
 
 
 def rewrite_card(text, figures):
+    # The card carries inventory counts only. It used to show "Titles checked", which reads as
+    # work already done while the figure it displayed was the number of titles a run would be
+    # eligible to check. A card is the wrong surface for a claim that needs a precondition, so
+    # the precise version of it lives in the README instead.
     for value, label in ((figures["entries"], "Entries"),
                          (figures["arxiv_unique"], "arXiv papers"),
                          (figures["repos_unique"], "Repos"),
-                         (figures["title_checks"], "Titles checked")):
+                         (figures["standards"], "Standards")):
         text = _sub(
             text,
             r'<div class="n">\d+</div><div class="l">%s</div>' % re.escape(label),
