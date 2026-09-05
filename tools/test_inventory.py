@@ -10,6 +10,7 @@ window quietly ran to the end of the file.
 """
 
 import importlib.util
+import os
 import pathlib
 import tempfile
 import unittest
@@ -21,6 +22,13 @@ inventory = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(inventory)
 
 README = pathlib.Path(__file__).resolve().parent.parent / "README.md"
+
+# A single-entry pull request moves every count in this class, and the contributor has no way
+# to know the number a maintainer will merge it at: another PR queued ahead of it changes the
+# correct value before this one lands. verify.yml sets this for the pull-request job only, so
+# the claim stays a hard gate at the one moment it has a single true value: push to main and
+# the weekly audit.
+README_CLAIMS_LENIENT = os.environ.get("README_CLAIMS_LENIENT") == "1"
 
 
 def _analyze_text(text):
@@ -78,6 +86,11 @@ class WindowBoundaries(unittest.TestCase):
         )
 
 
+@unittest.skipIf(
+    README_CLAIMS_LENIENT,
+    "hero-count claims are enforced at merge time (push to main / weekly audit), not on "
+    "contributor pull requests, where the correct number depends on merge order",
+)
 class ReadmeClaims(unittest.TestCase):
     def test_readme_states_the_entry_count_it_computes(self):
         """The headline count is a claim about this repository, so recompute it here."""

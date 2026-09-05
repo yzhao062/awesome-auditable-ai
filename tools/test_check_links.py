@@ -12,6 +12,7 @@ No network access: responses are supplied directly. Run with:
 import builtins
 import importlib.util
 import io
+import os
 import pathlib
 import re
 import subprocess
@@ -24,6 +25,12 @@ _SPEC = importlib.util.spec_from_file_location(
 )
 check_links = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(check_links)
+
+# See the matching flag in test_inventory.py: these two counts drift on every single-entry pull
+# request, and the contributor cannot know the number a maintainer will merge it at. verify.yml
+# sets this for the pull-request job only, so the claim stays a hard gate at push to main and
+# the weekly audit, where there is exactly one correct value.
+README_CLAIMS_LENIENT = os.environ.get("README_CLAIMS_LENIENT") == "1"
 
 
 def meta(identifier, title):
@@ -242,6 +249,11 @@ class ReachabilityPolicy(unittest.TestCase):
             % (check_links.SELF_REPO, url),
         )
 
+    @unittest.skipIf(
+        README_CLAIMS_LENIENT,
+        "enforced at merge time (push to main / weekly audit), not on contributor pull "
+        "requests, where the correct number depends on merge order",
+    )
     def test_readme_states_the_destination_count_it_would_audit(self):
         """The audited-destination total is a claim in the prose, and it moves whenever any
         link is added anywhere. Two people editing different sections each computed it against
@@ -264,6 +276,11 @@ class ReachabilityPolicy(unittest.TestCase):
             % (stated.group(1), len(audited)),
         )
 
+    @unittest.skipIf(
+        README_CLAIMS_LENIENT,
+        "enforced at merge time (push to main / weekly audit), not on contributor pull "
+        "requests, where the correct number depends on merge order",
+    )
     def test_readme_states_the_number_of_destinations_it_skips(self):
         """This total is spelled as a word, so it never reads like a figure that needs
         recomputing. Adding a contributor strip pointing at this repository's own graphs page
