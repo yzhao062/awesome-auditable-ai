@@ -477,6 +477,8 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 **\[TypeScript\] OrcaReplay** ([Continuum-AI-Corp/OrcaReplay](https://github.com/Continuum-AI-Corp/OrcaReplay)): records a coding-agent run below the harness, placing model calls, per-turn workspace changes, and opt-in MCP frames on one timeline. It then re-executes the agent against the recorded model responses and reports divergence, or forks the run from a filesystem checkpoint onto a different model for comparison. Apache-2.0, 2026-present.
 
+**\[JavaScript, Python\] plumb-line** ([slopstopper/plumb-line](https://github.com/slopstopper/plumb-line)): zero-dependency provenance primitive that propagates mock or low-confidence taint through derived values, paired with five Claude Code skills that audit a repository for unverified claims and source-truth gaps. Apache-2.0, 2026-present.
+
 ---
 
 ## Standards and Governance
