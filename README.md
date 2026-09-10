@@ -443,6 +443,8 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 **\[Go\] Bifrost** ([maximhq/bifrost](https://github.com/maximhq/bifrost)): OpenAI-compatible gateway that routes across providers with configurable failover, enforces budget and rate limits, executes MCP tools, and emits Prometheus metrics, OpenTelemetry traces, and per-request logs of prompt, response, token, cost, and latency. Apache-2.0, 2025-present.
 
+**\[Go\] Gram** ([speakeasy-api/gram](https://github.com/speakeasy-api/gram)): open-source AI control plane that connects agents to MCPs, enforces access policies, and records searchable tool calls, permission changes, and access events. AGPL-3.0, 2025-present.
+
 **\[Python\] DeepEval** ([confident-ai/deepeval](https://github.com/confident-ai/deepeval)): open-source evaluation framework that runs LLM and agent tests in a pytest-style workflow, with metrics for hallucination, relevancy, and task correctness that can be included in CI checks. Apache-2.0, 2023-present.
 
 **\[Python\] Evidently** ([evidentlyai/evidently](https://github.com/evidentlyai/evidently)): open-source framework to evaluate, test, and monitor ML and LLM systems, with 100+ built-in metrics spanning tabular data quality, data drift, and LLM judges. Apache-2.0, 2020-present.
