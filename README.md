@@ -492,6 +492,8 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 ---
 
+
+**[Vue 3, Python] OpenClaw Monitor** ([flik2002/openclaw-monitor](https://github.com/flik2002/openclaw-monitor)): free open-source monitoring dashboard for OpenClaw AI agents — token usage tracking, session history, 7-day cost trends, and multi-model support. Built with Vue 3 and ECharts. Apache-2.0, 2025-present.
 ## Standards and Governance
 
 Standards and governance instruments for agent reliability and accountability. Papers appear first, then the standards and frameworks.
