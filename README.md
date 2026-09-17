@@ -2,7 +2,7 @@
 
 <a name="top"></a>
 
-**[Audit Commons](https://auditcommons.org/)** is the companion website for this list, with AI auditing news, analysis, practical guides, and a searchable resource directory.
+[Audit Commons](https://auditcommons.org/) is the companion website for this list, with AI auditing news, analysis, practical guides, and a searchable resource directory.
 
 <div align="center">
 
