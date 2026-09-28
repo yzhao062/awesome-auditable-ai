@@ -43,6 +43,12 @@ jobs:
 
       - name: Run tool tests
         shell: bash
+        env:
+          # A single-entry PR moves every hero/destination count, and the contributor cannot
+          # know the number a maintainer will merge it at while other PRs are queued ahead of
+          # it. Leave that claim enforced where it has one true value: push to main and the
+          # weekly audit below, which sets no such flag.
+          README_CLAIMS_LENIENT: "1"
         run: |
           python -m unittest discover -s tools -p "test_*.py" -v
 

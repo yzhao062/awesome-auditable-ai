@@ -10,17 +10,30 @@ window quietly ran to the end of the file.
 """
 
 import importlib.util
+import os
 import pathlib
 import tempfile
 import unittest
 
-_SPEC = importlib.util.spec_from_file_location(
-    "inventory", pathlib.Path(__file__).with_name("inventory.py")
-)
-inventory = importlib.util.module_from_spec(_SPEC)
-_SPEC.loader.exec_module(inventory)
+def _load_sibling(name):
+    spec = importlib.util.spec_from_file_location(
+        name, pathlib.Path(__file__).with_name(name + ".py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+inventory = _load_sibling("inventory")
 
 README = pathlib.Path(__file__).resolve().parent.parent / "README.md"
+
+# A single-entry pull request moves every count in this class, and the contributor has no way
+# to know the number a maintainer will merge it at: another PR queued ahead of it changes the
+# correct value before this one lands. verify.yml sets this for the pull-request job only, so
+# the claim stays a hard gate at the one moment it has a single true value: push to main and
+# the weekly audit.
+README_CLAIMS_LENIENT = os.environ.get("README_CLAIMS_LENIENT") == "1"
 
 
 def _analyze_text(text):
@@ -78,17 +91,38 @@ class WindowBoundaries(unittest.TestCase):
         )
 
 
+@unittest.skipIf(
+    README_CLAIMS_LENIENT,
+    "hero-count claims are enforced at merge time (push to main / weekly audit), not on "
+    "contributor pull requests, where the correct number depends on merge order",
+)
 class ReadmeClaims(unittest.TestCase):
     def test_readme_states_the_entry_count_it_computes(self):
-        """The headline count is a claim about this repository, so recompute it here."""
+        """The headline count is a claim about this repository, so recompute it here.
+
+        The expected sentence is regenerated from the computed section count rather than
+        hard-coded. Writing `nine` in here made a legitimately recounted README fail a test
+        whose message says a figure is stale, and re-running the repair command could not fix
+        it, because nothing was stale. The English of the spelled count is pinned separately,
+        in test_the_number_words_mean_what_they_say.
+        """
+        recount = _load_sibling("recount")
         data = inventory.analyze(str(README))
         text = README.read_text(encoding="utf-8")
         self.assertIn(
-            "**%d entries across nine sections**" % data["entries"],
+            "**%d entries across %s sections**"
+            % (data["entries"], recount._word(len(data["sections"]))),
             text,
             "README.md states an entry count that inventory.py does not reproduce.",
         )
-        self.assertEqual(9, len(data["sections"]))
+
+    def test_the_list_still_has_nine_sections(self):
+        """A separate claim from the hero figure: the taxonomy itself is meant to be stable.
+
+        A tenth section is a deliberate editorial act, so it should fail here, under a name
+        that says the taxonomy changed, rather than inside a test about a stale number.
+        """
+        self.assertEqual(9, len(inventory.analyze(str(README))["sections"]))
 
     def test_every_hero_number_is_reproducible(self):
         """The whole hero sentence is a set of claims, and each one drifts independently.
@@ -113,6 +147,35 @@ class ReadmeClaims(unittest.TestCase):
                     % (computed, label, computed),
                 )
 
+    def test_readme_and_card_are_already_recounted(self):
+        """Every derived figure at once, and the one that names its own fix.
+
+        The tests above each catch one stale number and say which. This one runs the rewriter
+        over the committed files and asserts it has nothing to change, which is the property
+        that actually matters at merge time: a batch of merges moves ten figures across two
+        files, and the operator needs one command rather than ten hand edits. It fails with the
+        command that fixes it.
+        """
+        recount = _load_sibling("recount")
+        figures = recount.compute(README)
+        readme_text = README.read_text(encoding="utf-8")
+        self.assertEqual(
+            recount.rewrite_readme(readme_text, figures),
+            readme_text,
+            "README.md carries a derived figure that no longer matches the list. "
+            "Run `python tools/recount.py README.md`.",
+        )
+        card = README.parent / "assets" / "social-card.html"
+        if not card.exists():
+            self.skipTest("social card not present")
+        card_text = card.read_text(encoding="utf-8")
+        self.assertEqual(
+            recount.rewrite_card(card_text, figures),
+            card_text,
+            "assets/social-card.html is stale. Run `python tools/recount.py README.md`, then "
+            "re-render the PNG with `python assets/render_social.py`.",
+        )
+
     def test_social_card_matches_the_inventory(self):
         """The card is the first thing a link preview shows, and nothing else checks it."""
         card = README.parent / "assets" / "social-card.html"
@@ -130,6 +193,90 @@ class ReadmeClaims(unittest.TestCase):
                     "assets/social-card.html does not show %d for %s. Update the card and "
                     "re-render the PNG with assets/render_social.py." % (value, label),
                 )
+
+
+class RecountRewriter(unittest.TestCase):
+    """What the rewriter must refuse, tested on text rather than on the committed README.
+
+    These run regardless of README_CLAIMS_LENIENT: they are properties of the tool, not claims
+    about the current list, so a contributor's pull request should run them too.
+    """
+
+    def setUp(self):
+        self.recount = _load_sibling("recount")
+        self.text = README.read_text(encoding="utf-8")
+        self.figures = self.recount.compute(README)
+
+    def test_a_second_copy_of_a_figure_is_refused_rather_than_left_stale(self):
+        """One substitution capped at one cannot tell one target from two.
+
+        A duplicated sentence used to absorb the single permitted rewrite and leave the copy
+        behind, with the tool reporting success and the suite passing.
+        """
+        doubled = self.text + (
+            "\nThe list cites 1 destinations it audits, among them 2 arXiv records and 3 "
+            "entry-title labels a run checks against the arXiv page itself.\n"
+        )
+        with self.assertRaises(SystemExit) as raised:
+            self.recount.rewrite_readme(doubled, self.figures)
+        self.assertIn("found 2 places", str(raised.exception))
+
+    def test_a_missing_target_is_refused_rather_than_silently_skipped(self):
+        removed = self.text.replace("deliberately cross-listed", "deliberately grouped")
+        with self.assertRaises(SystemExit) as raised:
+            self.recount.rewrite_readme(removed, self.figures)
+        self.assertIn("found 0 places", str(raised.exception))
+
+    def test_the_cross_listed_count_is_written_and_not_only_computed(self):
+        """It was computed and returned, but no rewriter consumed it, so it stayed manual.
+
+        The expected text is produced by the writer against a pinned count rather than taken
+        from the committed README. Comparing against the committed file made this fail for any
+        pull request whose other figures were not yet recounted, which is every ordinary
+        contribution, and blamed the cross-list count for a difference in the entry totals.
+        """
+        figures = dict(self.figures, cross_listed=5)
+        expected = self.recount.rewrite_readme(self.text, figures)
+        self.assertIn("Five papers are deliberately cross-listed", expected)
+        stale = expected.replace(
+            "Five papers are deliberately cross-listed",
+            "Four papers are deliberately cross-listed",
+        )
+        self.assertNotEqual(stale, expected)
+        self.assertEqual(
+            self.recount.rewrite_readme(stale, figures),
+            expected,
+            "recount did not restore the cross-listed-paper count.",
+        )
+
+    def test_one_cross_listed_paper_reads_as_a_singular_sentence(self):
+        singular = dict(self.figures, cross_listed=1)
+        self.assertIn(
+            "One paper is deliberately cross-listed",
+            self.recount.rewrite_readme(self.text, singular),
+        )
+
+    def test_a_skipped_total_above_the_word_table_falls_back_to_digits(self):
+        many = dict(self.figures, skipped=11)
+        self.assertIn(
+            "The 11 destinations it does not audit",
+            self.recount.rewrite_readme(self.text, many),
+        )
+
+    def test_the_number_words_mean_what_they_say(self):
+        """An oracle the writer and its reader do not share.
+
+        Both sides read NUMBER_WORDS, so they agree with each other by construction: renaming
+        four to three would put the wrong word in the README and still pass every test that
+        decodes it through the same table. This is the only place the English is pinned.
+        """
+        self.assertEqual(
+            {1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
+             6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"},
+            self.recount.NUMBER_WORDS,
+        )
+        self.assertEqual("11", self.recount._word(11))
+        self.assertEqual("0", self.recount._word(0))
 
 
 if __name__ == "__main__":

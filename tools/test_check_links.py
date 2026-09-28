@@ -12,6 +12,7 @@ No network access: responses are supplied directly. Run with:
 import builtins
 import importlib.util
 import io
+import os
 import pathlib
 import re
 import subprocess
@@ -19,11 +20,22 @@ import sys
 import unittest
 from unittest.mock import patch
 
-_SPEC = importlib.util.spec_from_file_location(
-    "check_links", pathlib.Path(__file__).with_name("check_links.py")
-)
-check_links = importlib.util.module_from_spec(_SPEC)
-_SPEC.loader.exec_module(check_links)
+def _load_sibling(name):
+    spec = importlib.util.spec_from_file_location(
+        name, pathlib.Path(__file__).with_name(name + ".py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+check_links = _load_sibling("check_links")
+
+# See the matching flag in test_inventory.py: these two counts drift on every single-entry pull
+# request, and the contributor cannot know the number a maintainer will merge it at. verify.yml
+# sets this for the pull-request job only, so the claim stays a hard gate at push to main and
+# the weekly audit, where there is exactly one correct value.
+README_CLAIMS_LENIENT = os.environ.get("README_CLAIMS_LENIENT") == "1"
 
 
 def meta(identifier, title):
@@ -242,13 +254,18 @@ class ReachabilityPolicy(unittest.TestCase):
             % (check_links.SELF_REPO, url),
         )
 
+    @unittest.skipIf(
+        README_CLAIMS_LENIENT,
+        "enforced at merge time (push to main / weekly audit), not on contributor pull "
+        "requests, where the correct number depends on merge order",
+    )
     def test_readme_states_the_destination_count_it_would_audit(self):
         """The audited-destination total is a claim in the prose, and it moves whenever any
         link is added anywhere. Two people editing different sections each computed it against
         a base missing the other's link, and the stated figure was short by one."""
         readme = pathlib.Path(__file__).resolve().parent.parent / "README.md"
         text = readme.read_text(encoding="utf-8")
-        stated = re.search(r"across (\d+) destinations", text)
+        stated = re.search(r"cites (\d+) destinations it audits", text)
         if stated is None:
             self.skipTest("README states no destination count")
         urls = {
@@ -264,6 +281,11 @@ class ReachabilityPolicy(unittest.TestCase):
             % (stated.group(1), len(audited)),
         )
 
+    @unittest.skipIf(
+        README_CLAIMS_LENIENT,
+        "enforced at merge time (push to main / weekly audit), not on contributor pull "
+        "requests, where the correct number depends on merge order",
+    )
     def test_readme_states_the_number_of_destinations_it_skips(self):
         """This total is spelled as a word, so it never reads like a figure that needs
         recomputing. Adding a contributor strip pointing at this repository's own graphs page
@@ -274,15 +296,19 @@ class ReachabilityPolicy(unittest.TestCase):
         stated = re.search(r"The (\w+) destinations it does not audit", text)
         if stated is None:
             self.skipTest("README states no skipped-destination count")
-        written = {"two": 2, "three": 3, "four": 4, "five": 5,
-                   "six": 6, "seven": 7, "eight": 8, "nine": 9}
+        # Decoded through the writer's own table, plus its decimal fallback above ten. A local
+        # table that stopped at nine rejected a correctly recounted README, and the failure
+        # message blamed a stale figure that was not stale.
+        recount = _load_sibling("recount")
+        written = {word: value for value, word in recount.NUMBER_WORDS.items()}
         urls = {
             u for u, _, _ in check_links.extract_links(str(readme))
             if u.startswith(("http://", "https://"))
         }
         skipped = {u for u in urls if check_links.is_self_chrome(u)}
+        spelled = stated.group(1)
         self.assertEqual(
-            written.get(stated.group(1)),
+            written.get(spelled, int(spelled) if spelled.isdigit() else None),
             len(skipped),
             "README.md says there are %r destinations it does not audit; extracting the links "
             "finds %d. Any badge or link to this repository's own pages moves this."
@@ -327,6 +353,85 @@ class ReachabilityPolicy(unittest.TestCase):
                     ["check_links.py", "--failure-policy", policy],
                 )
                 self.assertEqual(code, 1)
+
+
+class OfflineFiguresAgainstTheAudit(unittest.TestCase):
+    """recount derives offline what the audit counts over the network. Fix the boundary.
+
+    The two agree on how many titles and identifiers the list makes *available* to compare.
+    They part company on how many a given run *completed*, because a title is compared only
+    when the fetched page returns one. That is why the README states the first and points at
+    the report for the second: an offline tool cannot know that a page came back empty.
+    """
+
+    ARXIV = "https://arxiv.org/abs/2501.00001"
+    OTHER = "https://arxiv.org/abs/2501.00002"
+    TITLE = "A Sufficiently Long Paper Title"
+    OTHER_TITLE = "Another Sufficiently Long Paper Title"
+
+    def _links(self):
+        """Two arXiv destinations, one of them cross-listed, plus rows that must not count.
+
+        A single-link fixture cannot see the distinction this class exists for: swapping the
+        occurrence count for a distinct-pair count passed a one-link version of these tests
+        while reintroducing the 128-against-130 divergence on the real list. Here the repeated
+        title makes three occurrences over two destinations, so the two rules give different
+        answers and only the audit's own rule matches.
+        """
+        return [
+            (self.ARXIV, self.TITLE, "link"),
+            (self.ARXIV, self.TITLE, "link"),
+            (self.OTHER, self.OTHER_TITLE, "link"),
+            (self.OTHER, "Code", "link"),
+            ("https://example.org/not-arxiv", "Some Ordinary Destination", "link"),
+            ("https://github.com/%s/commits/main" % check_links.SELF_REPO, None, "link"),
+        ]
+
+    def _figures(self, links):
+        # recount imports its own copy of check_links, so the fixture has to be installed on
+        # that instance rather than on this module's. inventory still reads the real README;
+        # only the link-derived figures are under test here.
+        recount = _load_sibling("recount")
+        readme = pathlib.Path(__file__).resolve().parent.parent / "README.md"
+        with patch.object(recount.check_links, "extract_links", return_value=links):
+            return recount.compute(readme)
+
+    def test_offline_and_runtime_agree_when_every_page_answers(self):
+        """Under complete metadata the two totals match, which is the documented precondition.
+
+        The expected 3 and 2 are written out rather than derived from the offline figures, so a
+        counting rule that changed on both sides at once would still fail here.
+        """
+        links = self._links()
+        # Fetched once per distinct destination, in sorted order; the self-chrome row is skipped.
+        responses = [(200, meta("2501.00001", self.TITLE)),
+                     (200, meta("2501.00002", self.OTHER_TITLE)),
+                     (200, "")]
+        _, report = run_audit(links, responses)
+        self.assertIn("| arXiv titles compared with `citation_title` | 3 |", report)
+        self.assertIn("| arXiv identifiers compared with `citation_arxiv_id` | 2 |", report)
+
+        figures = self._figures(links)
+        self.assertEqual(3, figures["title_checks"])
+        self.assertEqual(2, figures["arxiv_ids_checked"])
+        self.assertEqual(3, figures["audited"])
+        self.assertEqual(1, figures["skipped"])
+
+    def test_a_page_that_returns_no_title_lowers_the_run_but_not_the_list(self):
+        """The divergence the README must not paper over: eligible holds, compared drops."""
+        links = self._links()
+        responses = [(200, meta("2501.00001", "")),
+                     (200, meta("2501.00002", self.OTHER_TITLE)),
+                     (200, "")]
+        code, report = run_audit(links, responses)
+        self.assertEqual(3, self._figures(links)["title_checks"])
+        self.assertIn("| arXiv titles compared with `citation_title` | 1 |", report)
+        self.assertEqual(
+            1, code,
+            "a title that could not be verified must fail a strict run. That is what keeps the "
+            "gap between eligible and compared from ever being silently absorbed: the offline "
+            "count cannot see it, and the audit refuses to pass while it exists.",
+        )
 
 
 class Extraction(unittest.TestCase):
