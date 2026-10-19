@@ -317,6 +317,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 ### Decision-Record Tools
 
+**\[TypeScript\] Praesidia audit verifier** ([praesidia-ai/audit-verifier](https://github.com/praesidia-ai/audit-verifier)): source-build CLI that checks exported Praesidia decision-audit bundles offline, including record hashes, Ed25519 signatures, hash chains, and Merkle proofs; public samples use test keys, while production trust must be established separately. Apache-2.0, 2026-present.
+
 **\[Go\] centrol** ([baitelmal/centrol](https://github.com/baitelmal/centrol)): local CLI that records file events in a coding agent's git working tree and proxied MCP tool calls in a SHA-256 hash-chained JSONL ledger, with policy gates for proxy calls, an offline verifier, and pre-run file restoration; guard mode observes writes without sandboxing the child process or isolating same-user ledger access. Apache-2.0 core (MIT verifier), 2026-present.
 
 **\[TypeScript\] MakerChecker** ([makerchecker/MakerChecker](https://github.com/makerchecker/MakerChecker)): self-hosted governance for AI agents with role-based execution, human approval gates, and a hash-chained, Ed25519-signed audit log of every action. AGPL-3.0, 2026-present.
