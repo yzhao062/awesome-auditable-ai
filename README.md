@@ -461,6 +461,10 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 **\[Python\] OpenLLMetry** ([traceloop/openllmetry](https://github.com/traceloop/openllmetry)): OpenTelemetry-based instrumentation for LLM applications that emits standard OpenTelemetry traces routable to existing observability backends; SDKs across Python, TypeScript, Go, and Ruby. Apache-2.0, 2023-present.
 
 **\[Python\] Helicone** ([Helicone/helicone](https://github.com/Helicone/helicone)): open-source observability platform and AI gateway that logs LLM and agent traces, costs, and latency through a proxy and a unified API across providers. Apache-2.0, 2023-present.
+**\[TypeScript\] agent-cost-attribution-api** ([Retsumdk/agent-cost-attribution-api](https://github.com/Retsumdk/agent-cost-attribution-api)): HTTP API and CLI that prices each model call per token using built-in model pricing and records the spend under `projectId`, `intentId`, and `userId` keys with JSON-persistent records and filtered reporting endpoints, so cost is attributable to the intent that incurred it. MIT, 2026-present.
+
+**\[TypeScript\] agent-cost-attribution-api** ([Retsumdk/agent-cost-attribution-api](https://github.com/Retsumdk/agent-cost-attribution-api)): HTTP API and CLI that price LLM calls per token using built-in model pricing and record spend under `projectId`, `intentId`, and `userId` keys with JSON-persistent records and filtered reporting, so cost can be attributed to specific intents and audited after the fact. MIT, 2026-present.
+
 
 **\[Go\] Bifrost** ([maximhq/bifrost](https://github.com/maximhq/bifrost)): OpenAI-compatible gateway that routes across providers with configurable failover, enforces budget and rate limits, executes MCP tools, and emits Prometheus metrics, OpenTelemetry traces, and per-request logs of prompt, response, token, cost, and latency. Apache-2.0, 2025-present.
 
