@@ -349,6 +349,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 **\[Rust\] Vestige** ([samvallad33/vestige](https://github.com/samvallad33/vestige)): local MCP server that stores agent memory in an append-only, hash-chained log, supplies offline-checkable receipts for writes, and walks recorded execution relationships to support failure diagnosis. AGPL-3.0-licensed, 2026-present.
 
+**\[Python\] solvi** ([solvi-ai/solvi](https://github.com/solvi-ai/solvi)): runtime where a model proposes typed decisions and hard checks, rules and calibrated thresholds decide; each step record is hashed and chained to the previous one, replay recomputes every step from recorded inputs and reports mismatches or broken links, and its Guard allows, denies or escalates agent tool calls. Apache-2.0, 2026-present.
+
 ---
 
 ## Security Auditing and Scanners
