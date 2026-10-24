@@ -89,6 +89,11 @@ KNOWN_BOT_WALLS = {
         "Google Scholar serves 403 to datacenter clients, so this destination resolves from a "
         "workstation and fails from a GitHub-hosted runner; the profile was verified by hand in "
         "a browser.",
+    ("https://doi.org/10.1109/ACCESS.2026.3704541", 202):
+        "The DOI resolves to IEEE Xplore, whose JavaScript gateway answers non-browser and "
+        "scripted browser-agent requests with a 202; observed 2026-10-24. The AgentLeak title and "
+        "its IEEE Access 2026 venue were confirmed against the publisher-deposited Crossref record, "
+        "and the arXiv record links the same DOI.",
 }
 
 
