@@ -20,3 +20,11 @@ PLAN-*.md
 
 # Local run of the link audit (the committed report is LINK-AUDIT.md)
 link-audit-local.md
+.agent-config/
+agent-config.local.yaml
+/AGENTS.md
+/CLAUDE.md
+/agents/codex.md
+todo/*
+!todo/README.md
+.claude/
