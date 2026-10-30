@@ -516,6 +516,8 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 **\[Python\] agent-claimcheck** ([B0yko/agent-claimcheck](https://github.com/B0yko/agent-claimcheck)): checks success claims in agent-trace/v1 traces against recorded tool receipts and caller-supplied state probes, combining claim-evidence rules, a trained classifier, and an optional LLM judge through one verdict gate that routes unverifiable traces to a human review queue; its 300-trace benchmark is synthetic and was co-designed with the rules. Apache-2.0, 2026-present.
 
+**\[JavaScript\] Agent Role Contracts** ([suirindo/agent-role-contracts](https://github.com/suirindo/agent-role-contracts)): offline validator for declared agent roles, task scopes, review separation, and handoffs before dispatch; a passing result does not grant execution authority or establish runtime permission enforcement. MIT-licensed, 2026-present.
+
 ---
 
 ## Standards and Governance
