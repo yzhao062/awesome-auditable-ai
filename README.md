@@ -516,6 +516,8 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 **\[Python\] agent-claimcheck** ([B0yko/agent-claimcheck](https://github.com/B0yko/agent-claimcheck)): checks success claims in agent-trace/v1 traces against recorded tool receipts and caller-supplied state probes, combining claim-evidence rules, a trained classifier, and an optional LLM judge through one verdict gate that routes unverifiable traces to a human review queue; its 300-trace benchmark is synthetic and was co-designed with the rules. Apache-2.0, 2026-present.
 
+**\[JavaScript\] Ponder** ([Quinnod345/ponder](https://github.com/Quinnod345/ponder)): zero-dependency Node.js CLI and append-only JSONL review ledger (`.ponder/<slug>/ledger.jsonl`) that walks coding agents through a seven-step review state machine (`predict`, `units`, `grade`, `deliberate`, `delta`, `judge`, `decide`) across four roles (`skeptic`, `builder`, `dreamer`, `empath`), blocking completion (`exit 2`) while declared units remain ungraded (`coverage < 1.0`) or finding churn has not converged, with a `verify` command that reconciles derived `units.json` and `findings.json` state against the ledger and per-pass delta records. MIT-licensed, 2026-present.
+
 ---
 
 ## Standards and Governance
