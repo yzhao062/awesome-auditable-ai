@@ -350,6 +350,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 **\[Python\] solvi** ([solvi-ai/solvi](https://github.com/solvi-ai/solvi)): runtime where a model proposes typed decisions and hard checks, rules and calibrated thresholds decide; each step record is hashed and chained to the previous one, replay recomputes every step from recorded inputs and reports mismatches or broken links, and its Guard allows, denies or escalates agent tool calls. Apache-2.0, 2026-present.
 
+**\[Python, TypeScript\] Tracekit** ([Cygnux-Labs/Tracekit](https://github.com/Cygnux-Labs/Tracekit)): signer process outside the agent that decides each tool call before it runs (allow, deny, or hold it until a person approves the exact arguments) and signs every call, decision, approval, and result into a per-run Ed25519 hash chain, exported as a bundle that verifies offline; coding-agent hooks, framework adapters, and an MCP gateway report to it, calls that bypass them are not recorded, and because the default dev mode runs the signer as the agent's own user, the record holds up against a compromised agent only when the signer runs as another user, in a container, or on another host. MIT-licensed, 2026-present.
+
 ---
 
 ## Security Auditing and Scanners
