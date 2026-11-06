@@ -354,6 +354,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 **\[Python, TypeScript\] SealedRun** ([sealedrun/sealedrun](https://github.com/sealedrun/sealedrun)): recorder that records captured agent steps (LLM, MCP and A2A calls through its proxy, plus SDK self-reports) as a hybrid Ed25519 + ML-DSA-65 signed record in a hash chain, with the signing key held by the recorder rather than the agent. The recorder supports external anchors through Sigstore Rekor and RFC 3161 timestamp authorities, and evidence bundles verify offline, including delegation scope and human-approval checks. Apache-2.0, 2026-present.
 
+**\[Python\] meilynx-verify** ([Meilynx/meilynx-verify](https://github.com/Meilynx/meilynx-verify)): single-file offline verifier for Meilynx AI audit logs that recomputes each record's hash from exported records, confirms the SHA-256 chain back to its genesis value, checks Ed25519 record signatures and RFC 3161 chain-head timestamps, and reports the first break, against a public format spec. Apache-2.0, 2026-present.
+
 ---
 
 ## Security Auditing and Scanners
