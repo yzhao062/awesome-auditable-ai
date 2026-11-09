@@ -354,6 +354,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 **\[Python, TypeScript\] SealedRun** ([sealedrun/sealedrun](https://github.com/sealedrun/sealedrun)): recorder that records captured agent steps (LLM, MCP and A2A calls through its proxy, plus SDK self-reports) as a hybrid Ed25519 + ML-DSA-65 signed record in a hash chain, with the signing key held by the recorder rather than the agent. The recorder supports external anchors through Sigstore Rekor and RFC 3161 timestamp authorities, and evidence bundles verify offline, including delegation scope and human-approval checks. Apache-2.0, 2026-present.
 
+**\[TypeScript\] mnema** ([mnema-work/mnema](https://github.com/mnema-work/mnema)): command-line tool and MCP server that keep a coding agent's decisions in an append-only, hash-chained record with Ed25519-signed checkpoints, committed to the repository and checked offline by `mnema verify` and a second reader in Python; tamper-evident, not tamper-proof. Apache-2.0, 2026-present.
+
 ---
 
 ## Security Auditing and Scanners
