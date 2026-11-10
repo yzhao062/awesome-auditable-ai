@@ -360,6 +360,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 **\[TypeScript\] mnema** ([mnema-work/mnema](https://github.com/mnema-work/mnema)): command-line tool and MCP server that keep a coding agent's decisions in an append-only, hash-chained record with Ed25519-signed checkpoints, committed to the repository and checked offline by `mnema verify` and a second reader in Python; tamper-evident, not tamper-proof. Apache-2.0, 2026-present.
 
+**\[Python\] Mycelium Trails** ([giskard09/argentum-core](https://github.com/giskard09/argentum-core)): specifications and reference verifiers for content-addressed records of agent actions (`action_ref`, SHA-256 over RFC 8785 canonical JSON), with delegation-chain and decision-binding profiles and public conformance vectors; the record hash is anchored in a permissionless on-chain registry on Base and Arbitrum, so a third party can check that a record existed and was not altered without the operator's service. Apache-2.0, 2026-present.
+
 ---
 
 ## Security Auditing and Scanners
