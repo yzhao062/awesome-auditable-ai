@@ -532,6 +532,8 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 ---
 
+**\[TypeScript\] [agent-qa](https://vostride.com)** ([vostride/agent-qa](https://github.com/vostride/agent-qa)): GUI-testing agent for web, Android, and iOS that records run digests, step outcomes, screenshots, and evidence documents for failure diagnosis, with persistent memidex memory and reviewable self-improvement lessons. FSL-1.1-ALv2, 2026-present.
+
 ## Standards and Governance
 
 Standards and governance instruments for agent reliability and accountability. Papers appear first, then the standards and frameworks.
