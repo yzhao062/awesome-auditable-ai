@@ -293,6 +293,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 **\[Rust\] ZTAC** ([dcommey/ztac](https://github.com/dcommey/ztac)): macOS Seatbelt and Unix-socket broker prototype with object-resolved policies, single-use approval bindings, and Ed25519-signed hash-chained audit logs for coding-agent requests; evaluated on scripted attacks, with restrictions that break some benign workflows. MIT-licensed, 2026-present. [\[Paper\]](https://arxiv.org/abs/2610.14488)
 
+**\[Python\] HOL Guard** ([hashgraph-online/hol-guard](https://github.com/hashgraph-online/hol-guard)): open-source local security tool for supported AI coding agents that checks selected tool actions, requests approval or blocks based on policy, and records decision receipts for review. Apache-2.0, 2026-present. [[Project]](https://hol.org/guard)
+
 **\[Tool\] NeMo Guardrails** ([NVIDIA-NeMo/Guardrails](https://github.com/NVIDIA-NeMo/Guardrails)): an open-source toolkit that adds programmable rails to LLM applications and agents, intercepting requests to enforce Colang-defined policies and validate tool inputs and outputs before and after a call. Apache-2.0, 2023-present. [\[Paper\]](https://arxiv.org/abs/2310.10501) (EMNLP 2023 Demo)
 
 **\[Tool\] Guardrails AI** ([guardrails-ai/guardrails](https://github.com/guardrails-ai/guardrails)): an open-source Python framework that runs input and output guards in an application, composing validators from Guardrails Hub to detect and mitigate risks such as toxicity, PII exposure, and hallucination. Apache-2.0, 2023-present.
