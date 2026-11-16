@@ -360,6 +360,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 **\[TypeScript\] mnema** ([mnema-work/mnema](https://github.com/mnema-work/mnema)): command-line tool and MCP server that keep a coding agent's decisions in an append-only, hash-chained record with Ed25519-signed checkpoints, committed to the repository and checked offline by `mnema verify` and a second reader in Python; tamper-evident, not tamper-proof. Apache-2.0, 2026-present.
 
+**\[Python\] TRACES.md** ([MaxonT/TRACES.md](https://github.com/MaxonT/TRACES.md)): plain-text, append-only per-task trace format with a CLI that records each operation's tool, action, and result, failures included, and a validator that exits non-zero when a step marked ok reports a non-zero exit code. MIT-licensed, 2026-present.
+
 ---
 
 ## Security Auditing and Scanners
