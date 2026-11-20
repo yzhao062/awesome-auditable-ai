@@ -410,6 +410,8 @@ Risks that arrive through the tool and skill supply chain rather than through th
 
 **\[Python\] Snyk Agent Scan** ([snyk/agent-scan](https://github.com/snyk/agent-scan)): security scanner that auto-discovers the MCP servers, agent tools, and skills installed on a machine across 13 agent harnesses including Claude Code, Cursor, VS Code, Windsurf, Gemini CLI, and Codex. It flags more than 15 risk classes including prompt injection, tool poisoning, tool shadowing, toxic flows, malware payloads, and hardcoded secrets. Apache-2.0, 2025-present; it requires a Snyk API token, so it is an open-source client to a commercial service.
 
+**\[TypeScript\] Ironheights** ([Frank-Masciopinto/ironheights](https://github.com/Frank-Masciopinto/ironheights)): local static scanner that grades AI agent skills (SKILL.md folders for OpenClaw, Claude Code, Codex, and Cursor) and MCP tools before install, flagging instruction override, hidden text, credential reads, exfiltration, and persistence patterns, and that records approved skills so later changes surface as drift. It also runs as an MCP server and a GitHub Action. Apache-2.0, 2026-present.
+
 ---
 
 ## Datasets and Benchmarks
