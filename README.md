@@ -539,6 +539,8 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 
 **\[TypeScript\] agent-qa** ([vostride/agent-qa](https://github.com/vostride/agent-qa)): GUI-testing agent for web, Android, and iOS that records each step's planned action, served knowledge brief, outcome, and screenshots, together with console, network, and accessibility evidence, and sorts failures into causes such as test bug, app bug, environment, flake, or model error for post-run diagnosis. FSL-1.1-ALv2, a source-available license under which each release becomes Apache-2.0 after two years, 2026-present. [\[Project\]](https://vostride.com)
 
+**\[Python\] agentrecount** ([arsentev-ai/agentrecount](https://github.com/arsentev-ai/agentrecount)): command-line tool that turns each claim in an AI agent's report into a formula with numerator, denominator and period, then recomputes it from the user's own tables, reading a claims CSV and a folder of tables and writing a Markdown table and JSON, with four verdicts from "holds as stated" to "not reproduced or not testable". MIT, 2026-present.
+
 ---
 
 ## Standards and Governance
