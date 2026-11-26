@@ -365,6 +365,7 @@ Every component above is also listed in the topical section it belongs to, under
 **\[Python\] Mycelium Trails** ([giskard09/argentum-core](https://github.com/giskard09/argentum-core)): specifications and offline reference verifiers for content-addressed agent-action references (`action_ref`, a SHA-256 digest of four RFC 8785 canonical JSON metadata fields), with delegation-chain and decision-binding profiles and public conformance vectors. Its server anchors these digests on Arbitrum One, so a third party holding the four fields and the transaction reference can check that the digest was committed by that block. Apache-2.0, 2026-present.
 
 **\[Python\] TRACES.md** ([MaxonT/TRACES.md](https://github.com/MaxonT/TRACES.md)): plain-text, append-only per-task trace format with a CLI that records each operation's tool, action, and result, failures included, and a validator that exits non-zero when a step marked ok reports a non-zero exit code. MIT-licensed, 2026-present.
+**\[Python\] EPI (epi-recorder)** ([mohdibrahimaiml/epi-recorder](https://github.com/mohdibrahimaiml/epi-recorder)): records one AI decision as a portable, sealed `.epi` file — hash-chained steps, an Ed25519 signature over a SHA-256 manifest, and optional RFC 3161 timestamps — that a third party verifies offline with no account or server; a customer-side witness log flags a record that was re-sealed later or never reported at all. Apache-2.0, 2025-present.
 
 ---
 
