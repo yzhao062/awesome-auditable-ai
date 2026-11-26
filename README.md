@@ -366,6 +366,8 @@ Every component above is also listed in the topical section it belongs to, under
 
 **\[Python\] TRACES.md** ([MaxonT/TRACES.md](https://github.com/MaxonT/TRACES.md)): plain-text, append-only per-task trace format with a CLI that records each operation's tool, action, and result, failures included, and a validator that exits non-zero when a step marked ok reports a non-zero exit code. MIT-licensed, 2026-present.
 
+**\[Python\] EPI (epi-recorder)** ([mohdibrahimaiml/epi-recorder](https://github.com/mohdibrahimaiml/epi-recorder)): records one AI decision as a portable `.epi` file with hash-chained steps, an Ed25519-signed manifest of SHA-256 file hashes, and optional RFC 3161 timestamps, all checkable offline without an account or server, and an optional customer-side witness log flags received records that differ from the reported version or were never reported, plus gaps in the sealing sequence. Apache-2.0, 2025-present.
+
 ---
 
 ## Security Auditing and Scanners
@@ -530,8 +532,6 @@ Tools and platforms for agent observability, evaluation, and reliability. An ins
 **\[TypeScript\] YYLO Benchmark** ([yylo-dev/yylo-benchmark](https://github.com/yylo-dev/yylo-benchmark)): evaluation layer for coding-agent runs that executes each candidate in an isolated workspace and retains hash-linked execution receipts, post-run Git manifests, and evaluator configuration for later inspection. MIT-licensed, 2026-present.
 
 **\[Bash\] agent-watch** ([soul-sol/agent-watch](https://github.com/soul-sol/agent-watch)): Bash launcher and one-shot watcher for background coding agents. It reports running, done, failed, or stalled states from process liveness, recorded exit codes, tail-scoped failure markers, and Codex JSONL terminal events. A DONE verdict requires review of the output. MIT-licensed, 2026-present.
-
-**\[JavaScript, Vue\] OpenClaw Monitor** ([flik2002/openclaw-monitor](https://github.com/flik2002/openclaw-monitor)): Node.js and Vue dashboard for an OpenClaw gateway, showing total token usage, session status and runtime, and approximate seven-day message counts. Token counts use usage records when a session has them and fall back to text heuristics and fixed allowances when it has none. MIT-licensed, 2026 (last commit 2026-05-14).
 
 **\[Python\] agent-claimcheck** ([B0yko/agent-claimcheck](https://github.com/B0yko/agent-claimcheck)): checks success claims in agent-trace/v1 traces against recorded tool receipts and caller-supplied state probes, combining claim-evidence rules, a trained classifier, and an optional LLM judge through one verdict gate that routes unverifiable traces to a human review queue; its 300-trace benchmark is synthetic and was co-designed with the rules. Apache-2.0, 2026-present.
 
